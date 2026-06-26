@@ -1,5 +1,5 @@
 import { db, productCategories, products } from "@techtrack/db";
-import { desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq, ilike, or } from "drizzle-orm";
 import { requireAuth, requirePermission } from "../auth/auth.middleware.js";
 
 import type { FastifyInstance } from "fastify";
@@ -45,6 +45,8 @@ const updatePriceSchema = z.object({
 
 const listQuerySchema = z.object({
   search: z.string().optional(),
+  status: z.enum(["active", "inactive", "all"]).default("active"),
+  stock: z.enum(["all", "low", "available", "out"]).default("all"),
 });
 
 function cleanSkuPart(value?: string) {
@@ -103,6 +105,76 @@ async function getOrCreateCategory(name?: string) {
   return created;
 }
 
+type ProductRow = {
+  id: string;
+  name: string;
+  sku: string;
+  brand: string | null;
+  model: string | null;
+  description: string | null;
+  buyingPriceRwf: number;
+  sellingPriceRwf: number;
+  minSellingPriceRwf: number;
+  currentStock: number;
+  lowStockAlert: number;
+  warrantyText: string | null;
+  reviewStatus: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt?: Date;
+  categoryName: string | null;
+};
+
+function productForUser(row: ProductRow, isOwner: boolean) {
+  const isLowStock = row.currentStock <= row.lowStockAlert;
+  const isOutOfStock = row.currentStock <= 0;
+
+  if (!isOwner) {
+    return {
+      id: row.id,
+      name: row.name,
+      sku: row.sku,
+      brand: row.brand,
+      model: row.model,
+      description: row.description,
+      categoryName: row.categoryName,
+      sellingPriceRwf: row.sellingPriceRwf,
+      currentStock: row.currentStock,
+      lowStockAlert: row.lowStockAlert,
+      warrantyText: row.warrantyText,
+      reviewStatus: row.reviewStatus,
+      isActive: row.isActive,
+      isLowStock,
+      isOutOfStock,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
+  }
+
+  const estimatedProfitPerItemRwf = Math.max(
+    row.sellingPriceRwf - row.buyingPriceRwf,
+    0,
+  );
+
+  return {
+    ...row,
+    isLowStock,
+    isOutOfStock,
+    estimatedProfitPerItemRwf,
+    stockCostValueRwf: row.currentStock * row.buyingPriceRwf,
+    stockSellingValueRwf: row.currentStock * row.sellingPriceRwf,
+    estimatedStockProfitRwf: row.currentStock * estimatedProfitPerItemRwf,
+  };
+}
+
+function shouldIncludeByStockFilter(row: ProductRow, stock: string) {
+  if (stock === "low") return row.currentStock <= row.lowStockAlert;
+  if (stock === "available") return row.currentStock > 0;
+  if (stock === "out") return row.currentStock <= 0;
+
+  return true;
+}
+
 export async function productsRoutes(app: FastifyInstance) {
   app.get(
     "/categories",
@@ -113,6 +185,7 @@ export async function productsRoutes(app: FastifyInstance) {
       const categories = await db
         .select()
         .from(productCategories)
+        .where(eq(productCategories.isActive, true))
         .orderBy(productCategories.name);
 
       return {
@@ -123,11 +196,115 @@ export async function productsRoutes(app: FastifyInstance) {
   );
 
   app.get(
+    "/summary",
+    {
+      preHandler: [requireAuth, requirePermission("products.view")],
+    },
+    async (request) => {
+      const auth = request.authUser!;
+      const isOwner = auth.role === "owner";
+
+      const rows = await db
+        .select({
+          id: products.id,
+          currentStock: products.currentStock,
+          lowStockAlert: products.lowStockAlert,
+          buyingPriceRwf: products.buyingPriceRwf,
+          sellingPriceRwf: products.sellingPriceRwf,
+          isActive: products.isActive,
+        })
+        .from(products);
+
+      const activeRows = rows.filter((row) => row.isActive);
+      const lowStockRows = activeRows.filter(
+        (row) => row.currentStock <= row.lowStockAlert,
+      );
+      const outOfStockRows = activeRows.filter((row) => row.currentStock <= 0);
+
+      const summary: Record<string, number> = {
+        totalProducts: activeRows.length,
+        lowStockProducts: lowStockRows.length,
+        outOfStockProducts: outOfStockRows.length,
+        totalUnitsInStock: activeRows.reduce(
+          (sum, row) => sum + row.currentStock,
+          0,
+        ),
+      };
+
+      if (isOwner) {
+        summary.stockCostValueRwf = activeRows.reduce(
+          (sum, row) => sum + row.currentStock * row.buyingPriceRwf,
+          0,
+        );
+        summary.stockSellingValueRwf = activeRows.reduce(
+          (sum, row) => sum + row.currentStock * row.sellingPriceRwf,
+          0,
+        );
+        summary.estimatedStockProfitRwf =
+          summary.stockSellingValueRwf - summary.stockCostValueRwf;
+      }
+
+      return {
+        ok: true,
+        summary,
+      };
+    },
+  );
+
+  app.get(
+    "/low-stock",
+    {
+      preHandler: [requireAuth, requirePermission("products.view")],
+    },
+    async (request) => {
+      const auth = request.authUser!;
+      const isOwner = auth.role === "owner";
+
+      const rows = await db
+        .select({
+          id: products.id,
+          name: products.name,
+          sku: products.sku,
+          brand: products.brand,
+          model: products.model,
+          description: products.description,
+          buyingPriceRwf: products.buyingPriceRwf,
+          sellingPriceRwf: products.sellingPriceRwf,
+          minSellingPriceRwf: products.minSellingPriceRwf,
+          currentStock: products.currentStock,
+          lowStockAlert: products.lowStockAlert,
+          warrantyText: products.warrantyText,
+          reviewStatus: products.reviewStatus,
+          isActive: products.isActive,
+          createdAt: products.createdAt,
+          updatedAt: products.updatedAt,
+          categoryName: productCategories.name,
+        })
+        .from(products)
+        .leftJoin(
+          productCategories,
+          eq(products.categoryId, productCategories.id),
+        )
+        .where(eq(products.isActive, true))
+        .orderBy(products.currentStock, products.name);
+
+      return {
+        ok: true,
+        products: rows
+          .filter((row) => row.currentStock <= row.lowStockAlert)
+          .map((row) => productForUser(row, isOwner)),
+      };
+    },
+  );
+
+  app.get(
     "/",
     {
       preHandler: [requireAuth, requirePermission("products.view")],
     },
     async (request) => {
+      const auth = request.authUser!;
+      const isOwner = auth.role === "owner";
       const query = listQuerySchema.parse(request.query);
 
       const selection = {
@@ -146,10 +323,32 @@ export async function productsRoutes(app: FastifyInstance) {
         reviewStatus: products.reviewStatus,
         isActive: products.isActive,
         createdAt: products.createdAt,
+        updatedAt: products.updatedAt,
         categoryName: productCategories.name,
       };
 
-      const rows = query.search
+      const statusFilter =
+        !isOwner || query.status === "active"
+          ? eq(products.isActive, true)
+          : query.status === "inactive"
+            ? eq(products.isActive, false)
+            : undefined;
+
+      const searchFilter = query.search
+        ? or(
+            ilike(products.name, `%${query.search}%`),
+            ilike(products.sku, `%${query.search}%`),
+            ilike(products.brand, `%${query.search}%`),
+            ilike(products.model, `%${query.search}%`),
+          )
+        : undefined;
+
+      const where =
+        statusFilter && searchFilter
+          ? and(statusFilter, searchFilter)
+          : statusFilter || searchFilter;
+
+      const rows = where
         ? await db
             .select(selection)
             .from(products)
@@ -157,14 +356,7 @@ export async function productsRoutes(app: FastifyInstance) {
               productCategories,
               eq(products.categoryId, productCategories.id),
             )
-            .where(
-              or(
-                ilike(products.name, `%${query.search}%`),
-                ilike(products.sku, `%${query.search}%`),
-                ilike(products.brand, `%${query.search}%`),
-                ilike(products.model, `%${query.search}%`),
-              ),
-            )
+            .where(where)
             .orderBy(desc(products.createdAt))
         : await db
             .select(selection)
@@ -177,7 +369,9 @@ export async function productsRoutes(app: FastifyInstance) {
 
       return {
         ok: true,
-        products: rows,
+        products: rows
+          .filter((row) => shouldIncludeByStockFilter(row, query.stock))
+          .map((row) => productForUser(row, isOwner)),
       };
     },
   );
@@ -257,7 +451,13 @@ export async function productsRoutes(app: FastifyInstance) {
 
       return reply.code(201).send({
         ok: true,
-        product,
+        product: productForUser(
+          {
+            ...product,
+            categoryName: category?.name ?? null,
+          },
+          auth.role === "owner",
+        ),
       });
     },
   );
@@ -268,6 +468,9 @@ export async function productsRoutes(app: FastifyInstance) {
       preHandler: [requireAuth, requirePermission("products.view")],
     },
     async (request, reply) => {
+      const auth = request.authUser!;
+      const isOwner = auth.role === "owner";
+
       const params = z
         .object({ id: z.string().uuid() })
         .safeParse(request.params);
@@ -307,7 +510,7 @@ export async function productsRoutes(app: FastifyInstance) {
         .where(eq(products.id, params.data.id))
         .limit(1);
 
-      if (!product) {
+      if (!product || (!isOwner && !product.isActive)) {
         return reply.code(404).send({
           ok: false,
           message: "Product not found.",
@@ -316,7 +519,7 @@ export async function productsRoutes(app: FastifyInstance) {
 
       return {
         ok: true,
-        product,
+        product: productForUser(product, isOwner),
       };
     },
   );
@@ -389,7 +592,13 @@ export async function productsRoutes(app: FastifyInstance) {
 
       return {
         ok: true,
-        product: updated,
+        product: productForUser(
+          {
+            ...updated,
+            categoryName: category?.name ?? null,
+          },
+          auth.role === "owner",
+        ),
       };
     },
   );
@@ -465,7 +674,13 @@ export async function productsRoutes(app: FastifyInstance) {
 
       return {
         ok: true,
-        product: updated,
+        product: productForUser(
+          {
+            ...updated,
+            categoryName: null,
+          },
+          true,
+        ),
       };
     },
   );
@@ -524,7 +739,13 @@ export async function productsRoutes(app: FastifyInstance) {
 
       return {
         ok: true,
-        product: updated,
+        product: productForUser(
+          {
+            ...updated,
+            categoryName: null,
+          },
+          true,
+        ),
       };
     },
   );
@@ -583,7 +804,13 @@ export async function productsRoutes(app: FastifyInstance) {
 
       return {
         ok: true,
-        product: updated,
+        product: productForUser(
+          {
+            ...updated,
+            categoryName: null,
+          },
+          true,
+        ),
       };
     },
   );

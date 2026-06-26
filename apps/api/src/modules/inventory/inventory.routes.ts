@@ -71,7 +71,7 @@ function makeShipmentPrefix(date = new Date()) {
   const month = MONTH_CODES[date.getMonth()];
   const year = date.getFullYear();
 
-  return `DXB-${month}-${year}`;
+  return `SUP-${month}-${year}`;
 }
 
 async function makeNextShipmentReference(date = new Date()) {
@@ -99,7 +99,100 @@ async function makeNextShipmentReference(date = new Date()) {
   return `${prefix}-${nextNumber}`;
 }
 
+function arrivalForUser<T extends Record<string, unknown>>(
+  arrival: T,
+  isOwner: boolean,
+) {
+  if (isOwner) return arrival;
+
+  const { totalCostRwf, ...safeArrival } = arrival;
+
+  return safeArrival;
+}
+
+function arrivalItemForUser<T extends Record<string, unknown>>(
+  item: T,
+  isOwner: boolean,
+) {
+  if (isOwner) return item;
+
+  const { unitCostRwf, totalCostRwf, ...safeItem } = item;
+
+  return safeItem;
+}
+
 export async function inventoryRoutes(app: FastifyInstance) {
+  app.get(
+    "/summary",
+    {
+      preHandler: [requireAuth, requirePermission("stock.view")],
+    },
+    async (request) => {
+      const auth = request.authUser!;
+      const isOwner = auth.role === "owner";
+
+      const productRows = await db
+        .select({
+          id: products.id,
+          currentStock: products.currentStock,
+          lowStockAlert: products.lowStockAlert,
+          buyingPriceRwf: products.buyingPriceRwf,
+          sellingPriceRwf: products.sellingPriceRwf,
+          isActive: products.isActive,
+        })
+        .from(products)
+        .where(eq(products.isActive, true));
+
+      const movementRows = await db
+        .select({
+          movementType: stockMovements.movementType,
+          createdAt: stockMovements.createdAt,
+        })
+        .from(stockMovements)
+        .orderBy(desc(stockMovements.createdAt))
+        .limit(20);
+
+      const lowStockProducts = productRows.filter(
+        (product) => product.currentStock <= product.lowStockAlert,
+      );
+
+      const summary: Record<string, number | string | null> = {
+        activeProducts: productRows.length,
+        totalUnitsInStock: productRows.reduce(
+          (sum, product) => sum + product.currentStock,
+          0,
+        ),
+        lowStockProducts: lowStockProducts.length,
+        outOfStockProducts: productRows.filter(
+          (product) => product.currentStock <= 0,
+        ).length,
+        recentMovements: movementRows.length,
+        lastMovementAt: movementRows[0]?.createdAt?.toISOString() ?? null,
+      };
+
+      if (isOwner) {
+        summary.stockCostValueRwf = productRows.reduce(
+          (sum, product) =>
+            sum + product.currentStock * product.buyingPriceRwf,
+          0,
+        );
+        summary.stockSellingValueRwf = productRows.reduce(
+          (sum, product) =>
+            sum + product.currentStock * product.sellingPriceRwf,
+          0,
+        );
+        summary.estimatedStockProfitRwf =
+          Number(summary.stockSellingValueRwf) -
+          Number(summary.stockCostValueRwf);
+      }
+
+      return {
+        ok: true,
+        summary,
+      };
+    },
+  );
+
   app.get(
     "/next-shipment-reference",
     {
@@ -149,7 +242,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
           .where(eq(products.id, item.productId))
           .limit(1);
 
-        if (!product) {
+        if (!product || !product.isActive) {
           return reply.code(404).send({
             ok: false,
             message: "One of the selected products was not found.",
@@ -301,7 +394,10 @@ export async function inventoryRoutes(app: FastifyInstance) {
     {
       preHandler: [requireAuth, requirePermission("stock.view")],
     },
-    async () => {
+    async (request) => {
+      const auth = request.authUser!;
+      const isOwner = auth.role === "owner";
+
       const arrivals = await db
         .select({
           id: stockArrivals.id,
@@ -330,19 +426,27 @@ export async function inventoryRoutes(app: FastifyInstance) {
           .from(stockArrivalItems)
           .where(eq(stockArrivalItems.arrivalId, arrival.id));
 
-        result.push({
-          ...arrival,
-          itemCount: items.length,
-          totalQuantityReceived: items.reduce(
-            (sum, item) => sum + item.quantityReceived,
-            0,
+        result.push(
+          arrivalForUser(
+            {
+              ...arrival,
+              itemCount: items.length,
+              totalQuantityReceived: items.reduce(
+                (sum, item) => sum + item.quantityReceived,
+                0,
+              ),
+              totalDamagedQuantity: items.reduce(
+                (sum, item) => sum + item.damagedQuantity,
+                0,
+              ),
+              totalCostRwf: items.reduce(
+                (sum, item) => sum + item.totalCostRwf,
+                0,
+              ),
+            },
+            isOwner,
           ),
-          totalDamagedQuantity: items.reduce(
-            (sum, item) => sum + item.damagedQuantity,
-            0,
-          ),
-          totalCostRwf: items.reduce((sum, item) => sum + item.totalCostRwf, 0),
-        });
+        );
       }
 
       return {
@@ -358,6 +462,8 @@ export async function inventoryRoutes(app: FastifyInstance) {
       preHandler: [requireAuth, requirePermission("stock.view")],
     },
     async (request, reply) => {
+      const auth = request.authUser!;
+      const isOwner = auth.role === "owner";
       const params = idParamsSchema.safeParse(request.params);
 
       if (!params.success) {
@@ -412,7 +518,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
       return {
         ok: true,
         arrival,
-        items,
+        items: items.map((item) => arrivalItemForUser(item, isOwner)),
       };
     },
   );
