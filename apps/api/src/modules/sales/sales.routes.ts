@@ -11,7 +11,7 @@ import {
   stockMovements,
   users,
 } from "@techtrack/db";
-import { desc, eq, ilike } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
 import {
   makeBusinessDate,
   requireOpenCashSession,
@@ -98,6 +98,43 @@ const createSaleSchema = z.object({
 const saleParamsSchema = z.object({
   id: z.string().uuid(),
 });
+
+const listSalesQuerySchema = z.object({
+  search: z.string().optional(),
+  status: z.string().optional(),
+  paymentStatus: z.string().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+function startOfToday() {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function endOfToday() {
+  const date = new Date();
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
+
+function parseDateStart(value?: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function parseDateEnd(value?: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
 
 function cleanOptional(value?: string) {
   const clean = value?.trim();
@@ -702,11 +739,125 @@ export async function salesRoutes(app: FastifyInstance) {
   );
 
   app.get(
-    "/",
+    "/summary",
     {
       preHandler: [requireAuth, requirePermission("sales.create")],
     },
     async () => {
+      const todayStart = startOfToday();
+      const todayEnd = endOfToday();
+
+      const [summary] = await db
+        .select({
+          salesTodayCount: sql<number>`cast(count(case when ${sales.createdAt} between ${todayStart} and ${todayEnd} then 1 end) as int)`,
+          salesTodayRwf: sql<number>`coalesce(sum(case when ${sales.createdAt} between ${todayStart} and ${todayEnd} then ${sales.totalAmountRwf} else 0 end), 0)`,
+          receivedTodayRwf: sql<number>`coalesce(sum(case when ${sales.createdAt} between ${todayStart} and ${todayEnd} then ${sales.amountPaidRwf} else 0 end), 0)`,
+          openBalanceRwf: sql<number>`coalesce(sum(case when ${sales.balanceRwf} > 0 then ${sales.balanceRwf} else 0 end), 0)`,
+          openBalanceCount: sql<number>`cast(count(case when ${sales.balanceRwf} > 0 then 1 end) as int)`,
+          unpaidCount: sql<number>`cast(count(case when ${sales.paymentStatus} = 'unpaid' then 1 end) as int)`,
+          partialCount: sql<number>`cast(count(case when ${sales.paymentStatus} = 'partially_paid' then 1 end) as int)`,
+          totalSalesCount: sql<number>`cast(count(*) as int)`,
+        })
+        .from(sales);
+
+      const recentSales = await db
+        .select({
+          id: sales.id,
+          saleNumber: sales.saleNumber,
+          customerType: sales.customerType,
+          walkInName: sales.walkInName,
+          status: sales.status,
+          paymentStatus: sales.paymentStatus,
+          totalAmountRwf: sales.totalAmountRwf,
+          amountPaidRwf: sales.amountPaidRwf,
+          balanceRwf: sales.balanceRwf,
+          expectedPaymentAt: sales.expectedPaymentAt,
+          createdAt: sales.createdAt,
+          customerName: customers.name,
+          soldByName: users.name,
+        })
+        .from(sales)
+        .leftJoin(customers, eq(sales.customerId, customers.id))
+        .leftJoin(users, eq(sales.soldById, users.id))
+        .orderBy(desc(sales.createdAt))
+        .limit(8);
+
+      const needsAttention = recentSales.filter(
+        (sale) =>
+          Number(sale.balanceRwf || 0) > 0 ||
+          sale.paymentStatus === "unpaid" ||
+          sale.paymentStatus === "partially_paid",
+      );
+
+      return {
+        ok: true,
+        summary: summary || {
+          salesTodayCount: 0,
+          salesTodayRwf: 0,
+          receivedTodayRwf: 0,
+          openBalanceRwf: 0,
+          openBalanceCount: 0,
+          unpaidCount: 0,
+          partialCount: 0,
+          totalSalesCount: 0,
+        },
+        recentSales,
+        needsAttention,
+      };
+    },
+  );
+
+  app.get(
+    "/",
+    {
+      preHandler: [requireAuth, requirePermission("sales.create")],
+    },
+    async (request, reply) => {
+      const parsed = listSalesQuerySchema.safeParse(request.query);
+
+      if (!parsed.success) {
+        return reply.code(400).send({
+          ok: false,
+          message: "Please check sales filters.",
+          errors: parsed.error.flatten(),
+        });
+      }
+
+      const query = parsed.data;
+      const conditions = [];
+
+      if (query.status) {
+        conditions.push(eq(sales.status, query.status));
+      }
+
+      if (query.paymentStatus) {
+        conditions.push(eq(sales.paymentStatus, query.paymentStatus));
+      }
+
+      const dateFrom = parseDateStart(query.dateFrom);
+      const dateTo = parseDateEnd(query.dateTo);
+
+      if (dateFrom) {
+        conditions.push(gte(sales.createdAt, dateFrom));
+      }
+
+      if (dateTo) {
+        conditions.push(lte(sales.createdAt, dateTo));
+      }
+
+      if (query.search?.trim()) {
+        const term = `%${query.search.trim()}%`;
+
+        conditions.push(
+          or(
+            ilike(sales.saleNumber, term),
+            ilike(sales.walkInName, term),
+            ilike(customers.name, term),
+            ilike(users.name, term),
+          ),
+        );
+      }
+
       const rows = await db
         .select({
           id: sales.id,
@@ -726,7 +877,9 @@ export async function salesRoutes(app: FastifyInstance) {
         .from(sales)
         .leftJoin(customers, eq(sales.customerId, customers.id))
         .leftJoin(users, eq(sales.soldById, users.id))
-        .orderBy(desc(sales.createdAt));
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(sales.createdAt))
+        .limit(query.limit);
 
       return {
         ok: true,
