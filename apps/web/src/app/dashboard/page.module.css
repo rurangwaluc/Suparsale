@@ -4,300 +4,611 @@
   min-width: 0;
 }
 
+.hero,
+.statusCard,
+.focusPanel,
+.moneyPanel,
+.activityPanel,
+.kpiCard {
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.055);
+}
+
 .hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
   align-items: center;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 18px;
 }
 
 .heroCopy {
   min-width: 0;
 }
 
+.kicker {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--blue) 28%, var(--border));
+  background: var(--blue-lt);
+  color: var(--blue);
+  border-radius: 999px;
+  padding: 8px 11px;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.hero h1 {
+  margin: 14px 0 0;
+  color: var(--gray-900);
+  font-size: clamp(28px, 3vw, 42px);
+  line-height: 1.02;
+  letter-spacing: -1.6px;
+  font-weight: 950;
+}
+
+.hero p {
+  max-width: 680px;
+  margin: 9px 0 0;
+  color: var(--gray-500);
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 750;
+}
+
 .heroActions {
+  display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 10px;
+}
+
+.primaryButton,
+.secondaryButton {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 0 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.primaryButton {
+  border: 1px solid var(--primary-h);
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 14px 30px rgba(14, 165, 233, 0.22);
+}
+
+.secondaryButton {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--gray-700);
 }
 
 .messageBox {
   margin-bottom: 18px;
-  padding: 16px;
+  padding: 14px 16px;
   border: 1px solid var(--border);
   background: var(--card);
   box-shadow: var(--sh);
-  border-radius: 16px;
-  font-weight: 900;
+  border-radius: 13px;
+  font-weight: 850;
   color: var(--gray-700);
 }
 
-.statusPanel {
-  margin-bottom: 18px;
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: var(--sh);
+.statusCard {
   display: grid;
-  grid-template-columns: minmax(320px, 1.45fr) repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
+  gap: 16px;
   align-items: center;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 18px;
 }
 
 .statusOpen {
-  border-color: rgba(34, 197, 94, 0.28);
-  background: var(--green-lt);
+  border-color: rgba(22, 163, 74, 0.28);
+  background: color-mix(in srgb, var(--green-lt) 58%, var(--card));
 }
 
 .statusWarning {
-  border-color: rgba(245, 158, 11, 0.35);
-  background: var(--blue-lt);
+  border-color: rgba(14, 165, 233, 0.34);
+  background: color-mix(in srgb, var(--blue-lt) 64%, var(--card));
 }
 
 .statusMain {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 14px;
-  min-width: 0;
 }
 
-.statusMain :global(.feature-icon) {
-  margin-bottom: 0;
+.statusIcon,
+.kpiIcon,
+.issueIcon {
   flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: var(--blue-lt);
+  color: var(--blue);
+  border: 1px solid color-mix(in srgb, var(--blue) 22%, var(--border));
 }
 
-.statusMain strong {
-  display: block;
-  color: var(--gray-900);
-  font-size: 18px;
-  font-weight: 950;
-  letter-spacing: -0.3px;
-  line-height: 1.25;
+.statusIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
 }
 
 .statusMain span {
   display: block;
-  margin-top: 5px;
+  color: var(--gray-500);
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.statusMain strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--gray-900);
+  font-size: 19px;
+  line-height: 1.2;
+  font-weight: 950;
+}
+
+.statusMain p {
+  margin: 5px 0 0;
   color: var(--gray-600);
   font-size: 13px;
-  font-weight: 800;
   line-height: 1.45;
+  font-weight: 800;
+}
+
+.statusMiniGrid {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .statusMini {
   min-width: 0;
   border: 1px solid var(--border);
+  border-radius: 13px;
   background: var(--card);
-  border-radius: 16px;
   padding: 12px;
 }
 
-.statusMini div {
+.statusMini span,
+.methodMini span {
+  display: block;
   color: var(--gray-500);
-  font-size: 11px;
-  font-weight: 900;
+  font-size: 10.5px;
+  font-weight: 950;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.35px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.statusMini strong {
+.statusMini strong,
+.methodMini strong {
   display: block;
   margin-top: 6px;
   color: var(--gray-900);
-  font-size: 16px;
-  font-weight: 950;
-  letter-spacing: -0.2px;
+  font-size: 14px;
   line-height: 1.2;
-  word-break: break-word;
+  font-weight: 950;
+  overflow-wrap: anywhere;
 }
 
 .dangerText {
   color: var(--red) !important;
 }
 
-.panel {
-  margin-bottom: 18px;
-}
-
-.metricsGrid {
+.kpiGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 15px;
+  gap: 14px;
   margin-bottom: 18px;
 }
 
-.metricCard {
+.kpiCard {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.kpiCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--blue);
+}
+
+.tonegreen::before {
+  background: var(--green);
+}
+
+.tonedanger::before {
+  background: var(--red);
+}
+
+.kpiTop {
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.metricValue {
-  color: var(--gray-900);
-  font-size: 24px;
+.kpiIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+}
+
+.kpiTop span {
+  min-width: 0;
+  color: var(--gray-500);
+  font-size: 11px;
   font-weight: 950;
-  letter-spacing: -0.7px;
-  line-height: 1.15;
-  word-break: break-word;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.dashboardGrid {
+.kpiCard > strong {
+  display: block;
+  margin-top: 16px;
+  color: var(--gray-900);
+  font-size: clamp(20px, 2vw, 26px);
+  line-height: 1.12;
+  letter-spacing: -0.8px;
+  font-weight: 950;
+  overflow-wrap: anywhere;
+}
+
+.kpiCard > p {
+  margin: 7px 0 0;
+  color: var(--gray-500);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 800;
+}
+
+.ownerGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
   gap: 18px;
   margin-bottom: 18px;
 }
 
-.dashboardPage :global(.table-card),
-.dashboardPage :global(.premium-panel),
-.dashboardPage :global(.premium-stat-card),
-.dashboardPage :global(.attention-item),
-.dashboardPage :global(.quick-action) {
-  min-width: 0;
+.focusPanel,
+.moneyPanel,
+.activityPanel {
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.dashboardPage :global(.attention-item) {
+.panelHeader {
+  min-width: 0;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid var(--border);
+  padding: 18px;
+}
+
+.panelHeader h2 {
+  margin: 0;
+  color: var(--gray-900);
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 950;
+  letter-spacing: -0.35px;
+}
+
+.panelHeader p {
+  margin: 5px 0 0;
+  color: var(--gray-500);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 800;
+}
+
+.panelRight {
+  flex: 0 0 auto;
+}
+
+.goodBadge,
+.dangerBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.goodBadge {
+  border: 1px solid rgba(22, 163, 74, 0.22);
+  background: var(--green-lt);
+  color: var(--green);
+}
+
+.dangerBadge {
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  background: var(--red-lt);
+  color: var(--red);
+}
+
+.issueList {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.issueItem {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 11px;
   align-items: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--gray-50);
+  padding: 11px;
 }
 
-.dashboardPage :global(.attention-item > div) {
+.issueIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 13px;
+}
+
+.issueItem strong,
+.issueItem span {
+  display: block;
   min-width: 0;
 }
 
-.dashboardPage :global(.attention-item strong),
-.dashboardPage :global(.attention-item span) {
+.issueItem strong {
+  color: var(--gray-900);
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 950;
   overflow-wrap: anywhere;
 }
 
-.dashboardPage :global(.quick-actions-grid) {
+.issueItem span {
+  margin-top: 4px;
+  color: var(--gray-500);
+  font-size: 12px;
+  line-height: 1.42;
+  font-weight: 780;
+  overflow-wrap: anywhere;
+}
+
+.moneyRows {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.moneyRow,
+.moneyRowStrong {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--gray-50);
+  padding: 12px;
+}
+
+.moneyRowStrong {
+  border-color: color-mix(in srgb, var(--blue) 28%, var(--border));
+  background: var(--blue-lt);
+}
+
+.moneyRow span,
+.moneyRowStrong span {
+  color: var(--gray-500);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.moneyRow strong,
+.moneyRowStrong strong {
+  color: var(--gray-900);
+  font-size: 14px;
+  font-weight: 950;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.methodGrid {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 14px 14px;
 }
 
-.dashboardPage :global(.quick-action) {
-  min-height: 118px;
+.methodMini {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--card);
+  padding: 12px;
 }
 
-@media (min-width: 1440px) {
-  .statusPanel {
-    grid-template-columns: minmax(380px, 1.45fr) repeat(4, minmax(0, 1fr));
-  }
-
-  .metricsGrid {
-    gap: 18px;
-  }
-
-  .dashboardGrid {
-    gap: 20px;
-  }
+.activityGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
 }
 
 @media (max-width: 1180px) {
-  .statusPanel {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .statusMain {
-    grid-column: 1 / -1;
-  }
-
-  .metricsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .dashboardGrid {
+  .hero,
+  .statusCard,
+  .ownerGrid,
+  .activityGrid {
     grid-template-columns: 1fr;
   }
 
   .heroActions {
     justify-content: flex-start;
   }
+
+  .kpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statusMiniGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .activityGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 760px) {
   .hero {
+    border-radius: 14px;
     padding: 18px;
-    border-radius: 18px;
   }
 
   .hero h1 {
-    font-size: 25px;
-    line-height: 1.08;
+    font-size: 28px;
+    letter-spacing: -1.1px;
   }
 
   .hero p {
     font-size: 13px;
-    line-height: 1.55;
   }
 
   .heroActions {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
-  .heroActions :global(.btn) {
+  .primaryButton,
+  .secondaryButton {
     width: 100%;
+    min-height: 42px;
+    padding-inline: 10px;
   }
 
-  .statusPanel {
-    padding: 14px;
-    border-radius: 18px;
+  .statusCard,
+  .focusPanel,
+  .moneyPanel,
+  .activityPanel,
+  .kpiCard {
+    border-radius: 14px;
+  }
+
+  .statusCard {
     grid-template-columns: 1fr;
+    padding: 14px;
   }
 
   .statusMain {
     align-items: flex-start;
   }
 
-  .statusMain strong {
-    font-size: 16px;
+  .statusMiniGrid {
+    grid-template-columns: 1fr;
   }
 
-  .statusMain span {
-    font-size: 12px;
-  }
-
-  .metricsGrid {
+  .kpiGrid {
     grid-template-columns: 1fr;
     gap: 12px;
   }
 
-  .metricValue {
-    font-size: 22px;
+  .ownerGrid,
+  .activityGrid {
+    gap: 14px;
   }
 
-  .dashboardPage :global(.table-card-header) {
+  .panelHeader {
+    min-height: auto;
     align-items: flex-start;
-    flex-direction: column;
+    padding: 15px;
   }
 
-  .dashboardPage :global(.quick-actions-grid) {
+  .issueList,
+  .moneyRows {
+    padding: 12px;
+  }
+
+  .methodGrid {
+    padding: 0 12px 12px;
+  }
+}
+
+@media (min-width: 390px) and (max-width: 760px) {
+  .statusMiniGrid,
+  .kpiGrid,
+  .methodGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statusMiniGrid .statusMini:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 380px) {
+  .heroActions {
     grid-template-columns: 1fr;
   }
 
-  .dashboardPage :global(.quick-action) {
-    min-height: auto;
+  .methodGrid {
+    grid-template-columns: 1fr;
   }
 
-  .dashboardPage :global(.attention-list) {
-    padding: 10px 12px 14px;
-  }
-
-  .dashboardPage :global(.attention-item) {
-    padding: 12px;
-  }
-}
-
-@media (max-width: 420px) {
-  .statusMini {
-    padding: 11px;
-  }
-
-  .statusMini strong {
-    font-size: 15px;
-  }
-
-  .metricValue {
+  .kpiCard > strong {
     font-size: 20px;
   }
+
+  .panelHeader {
+    flex-direction: column;
+  }
+
+  .panelRight {
+    width: 100%;
+  }
+
+  .goodBadge,
+  .dangerBadge {
+    width: 100%;
+  }
 }
-
-
-
-
