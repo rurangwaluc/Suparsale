@@ -1,0 +1,744 @@
+.inventoryPage {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.ownerHero {
+  margin-bottom: 18px;
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(245, 158, 11, 0.12),
+      transparent 34%
+    ),
+    var(--card);
+  box-shadow: var(--sh);
+}
+
+.kicker {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--blue-lt);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 950;
+  margin-bottom: 12px;
+}
+
+.ownerHero h1 {
+  margin: 0;
+  color: var(--gray-900);
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: -0.8px;
+  font-weight: 950;
+}
+
+.ownerHero p {
+  max-width: 640px;
+  margin-top: 9px;
+  color: var(--gray-600);
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 750;
+}
+
+.heroActions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.actionCard {
+  margin-bottom: 18px;
+  padding: 16px;
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  border: 1px solid rgba(34, 197, 94, 0.24);
+  background: var(--green-lt);
+  border-radius: 18px;
+  box-shadow: var(--sh);
+}
+
+.actionIcon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--green);
+  background: var(--card);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+}
+
+.actionCard strong {
+  display: block;
+  color: var(--gray-900);
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1.35;
+}
+
+.actionCard span {
+  display: block;
+  margin-top: 5px;
+  color: var(--gray-600);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.metricCard {
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: var(--sh);
+}
+
+.metricTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.metricTop :global(.feature-icon) {
+  margin-bottom: 0;
+}
+
+.metricValue {
+  color: var(--gray-900);
+  font-size: 23px;
+  font-weight: 950;
+  letter-spacing: -0.6px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.messageBox {
+  margin-bottom: 18px;
+  padding: 15px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--sh);
+  border-radius: 16px;
+  font-weight: 900;
+  color: var(--gray-700);
+}
+
+.listingPanel {
+  margin-bottom: 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--sh);
+  overflow: hidden;
+}
+
+.listingTop {
+  padding: 18px 18px 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.listingTop h2 {
+  margin: 0;
+  color: var(--gray-900);
+  font-size: 22px;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  font-weight: 950;
+}
+
+.listingTop p {
+  margin-top: 6px;
+  color: var(--gray-500);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.toolbar {
+  padding: 0 18px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.searchBox {
+  min-width: 0;
+  flex: 1;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 13px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--gray-50);
+  color: var(--gray-400);
+}
+
+.searchBox input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--gray-900);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.responsiveList {
+  padding: 0 18px 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.listHeader,
+.movementHeader {
+  display: grid;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--gray-50);
+  color: var(--gray-500);
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.listHeader {
+  grid-template-columns: minmax(0, 1.8fr) 0.55fr 0.65fr 0.9fr 0.6fr;
+}
+
+.movementHeader {
+  grid-template-columns: minmax(0, 1.6fr) 0.7fr 0.9fr minmax(0, 1fr);
+}
+
+.listRow,
+.movementRow {
+  min-width: 0;
+  display: grid;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: var(--sh-sm);
+}
+
+.listRow {
+  grid-template-columns: minmax(0, 1.8fr) 0.55fr 0.65fr 0.9fr 0.6fr;
+}
+
+.movementRow {
+  grid-template-columns: minmax(0, 1.6fr) 0.7fr 0.9fr minmax(0, 1fr);
+}
+
+.primaryCell {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.avatarIcon {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  color: var(--blue);
+  background: var(--blue-lt);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.primaryCell strong {
+  display: block;
+  min-width: 0;
+  color: var(--gray-900);
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.primaryCell span {
+  display: block;
+  margin-top: 4px;
+  color: var(--gray-500);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.dataCell,
+.reasonCell {
+  min-width: 0;
+}
+
+.dataCell span,
+.reasonCell span {
+  display: none;
+  color: var(--gray-500);
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.dataCell strong,
+.reasonCell strong {
+  display: block;
+  color: var(--gray-900);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.positiveValue {
+  color: var(--green) !important;
+}
+
+.negativeValue {
+  color: var(--red) !important;
+}
+
+.actionCell {
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actionCell button {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  background: var(--gray-50);
+  color: var(--gray-800);
+  border-radius: 12px;
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.loadMoreButton {
+  width: calc(100% - 36px);
+  margin: 0 18px 18px;
+  min-height: 42px;
+  border: 1px solid var(--border);
+  background: var(--gray-50);
+  color: var(--gray-800);
+  border-radius: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.mobileHint {
+  margin: 0 18px 18px;
+  color: var(--gray-500);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.emptyCard {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 30px 16px;
+  border: 1px solid var(--border);
+  background: var(--green-lt);
+  border-radius: 16px;
+  color: var(--gray-500);
+}
+
+.emptyCard div {
+  color: var(--green);
+}
+
+.emptyCard strong {
+  color: var(--gray-900);
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.emptyCard span {
+  max-width: 430px;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.modalGrid,
+.detailsStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.arrivalSummaryBox {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(245, 158, 11, 0.1),
+      transparent 36%
+    ),
+    var(--gray-50);
+}
+
+.summaryHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.summaryHeader p {
+  margin-top: 5px;
+  color: var(--gray-500);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.miniGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.miniInfo {
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 14px;
+  padding: 11px;
+}
+
+.miniInfo span {
+  display: block;
+  color: var(--gray-500);
+  font-size: 10.5px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.miniInfo strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--gray-900);
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.miniInfoSuccess {
+  border-color: rgba(34, 197, 94, 0.22);
+  background: var(--green-lt);
+}
+
+.miniInfoWarning {
+  border-color: rgba(249, 115, 22, 0.24);
+  background: var(--blue-lt);
+}
+
+.sectionTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.itemStack,
+.detailsItemList {
+  display: grid;
+  gap: 12px;
+}
+
+.itemCard,
+.detailItemCard {
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--gray-50);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: var(--sh-sm);
+}
+
+.itemCard {
+  display: grid;
+  gap: 12px;
+}
+
+.itemCardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.itemCardTop strong {
+  color: var(--gray-900);
+  font-weight: 950;
+}
+
+.itemFormGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(230px, 1.7fr) minmax(120px, 0.75fr) minmax(120px, 0.75fr)
+    minmax(130px, 0.8fr);
+  gap: 14px;
+}
+
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detailItemTop {
+  min-width: 0;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.detailItemTop h3 {
+  margin: 0;
+  color: var(--gray-900);
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.detailItemTop p {
+  margin-top: 4px;
+  color: var(--gray-500);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.inventoryPage :global(.staff-form-group),
+.inventoryPage :global(.staff-form-group input),
+.inventoryPage :global(.staff-form-group select),
+.inventoryPage :global(.staff-form-group textarea) {
+  min-width: 0;
+}
+
+.inventoryPage :global(.staff-form-group textarea) {
+  min-height: 90px;
+}
+
+@media (max-width: 1180px) {
+  .metricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ownerHero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .heroActions {
+    justify-content: flex-start;
+  }
+
+  .itemFormGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .listHeader,
+  .movementHeader {
+    display: none;
+  }
+
+  .listRow,
+  .movementRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .dataCell,
+  .reasonCell {
+    padding-left: 49px;
+  }
+
+  .dataCell span,
+  .reasonCell span {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .actionCell {
+    padding-left: 49px;
+    justify-content: stretch;
+  }
+
+  .actionCell button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .ownerHero {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .ownerHero h1 {
+    font-size: 25px;
+  }
+
+  .ownerHero p {
+    font-size: 13px;
+  }
+
+  .heroActions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .heroActions :global(.btn) {
+    width: 100%;
+  }
+
+  .actionCard {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .metricsGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .metricCard {
+    padding: 13px;
+    border-radius: 15px;
+  }
+
+  .metricTop {
+    margin-bottom: 10px;
+  }
+
+  .metricTop :global(.feature-icon) {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+  }
+
+  .metricValue {
+    font-size: 21px;
+  }
+
+  .listingPanel {
+    border-radius: 18px;
+  }
+
+  .listingTop {
+    padding: 16px 14px 10px;
+    flex-direction: column;
+  }
+
+  .listingTop h2 {
+    font-size: 20px;
+  }
+
+  .toolbar {
+    padding: 0 14px 14px;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar :global(.btn) {
+    width: 100%;
+  }
+
+  .responsiveList {
+    padding: 0 14px 14px;
+  }
+
+  .dataCell,
+  .reasonCell,
+  .actionCell {
+    padding-left: 0;
+  }
+
+  .modalGrid,
+  .detailsStatsGrid,
+  .miniGrid,
+  .itemFormGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryHeader,
+  .sectionTop,
+  .itemCardTop {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sectionTop :global(.btn),
+  .itemCardTop :global(.btn) {
+    width: 100%;
+  }
+}
+
+
+
+

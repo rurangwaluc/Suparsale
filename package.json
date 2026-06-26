@@ -1,0 +1,21 @@
+{
+  "name": "suparsale-store",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "dev:api": "pnpm --filter @techtrack/api dev",
+    "build:api": "pnpm --filter @techtrack/api build",
+    "start:api": "pnpm --filter @techtrack/api start",
+    "dev:web": "pnpm --filter @techtrack/web dev",
+    "build:web": "pnpm --filter @techtrack/web build",
+    "start:web": "pnpm --filter @techtrack/web start",
+    "db:generate": "pnpm --filter @techtrack/db db:generate",
+    "db:migrate": "pnpm --filter @techtrack/db db:migrate",
+    "db:push": "pnpm --filter @techtrack/db db:push",
+    "db:studio": "pnpm --filter @techtrack/db db:studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

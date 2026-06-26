@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment files
+.env
+.env.*
+!.env.example
+apps/api/.env
+apps/api/.env.*
+apps/web/.env.local
+apps/web/.env.*
+packages/db/.env
+packages/db/.env.*
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+.turbo/
+.vercel/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local database / temp/cache
+tmp/
+temp/
+.cache/
