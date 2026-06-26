@@ -3,12 +3,14 @@
 import {
   AlertTriangle,
   CheckCircle2,
+  Eye,
   Loader2,
   Minus,
   Plus,
   RefreshCw,
   Search,
   ShoppingCart,
+  ReceiptText,
   Trash2,
   User,
   WalletCards,
@@ -19,8 +21,12 @@ import type { FormEvent, ReactNode } from "react";
 import {
   InstallmentFrequency,
   SaleCustomerType,
+  SaleListItem,
   SalePaymentMethod,
+  SalesSummary,
   createSale,
+  getSales,
+  getSalesSummary,
 } from "@/lib/sales";
 import { Product, getProducts } from "@/lib/products";
 import { useEffect, useMemo, useState } from "react";
@@ -60,6 +66,18 @@ function formatRwf(value: number) {
   return `Rwf ${Math.abs(Number(value || 0)).toLocaleString("en-US")}`;
 }
 
+function cleanLabel(value: string) {
+  return value.replaceAll("_", " ");
+}
+
+function formatShortDate(value: string) {
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
+
 function makeEveningLocalValue() {
   const date = new Date();
 
@@ -86,6 +104,9 @@ export default function SalesPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [cashSession, setCashSession] = useState<CashSession | null>(null);
+  const [salesSummary, setSalesSummary] = useState<SalesSummary | null>(null);
+  const [recentSales, setRecentSales] = useState<SaleListItem[]>([]);
+  const [attentionSales, setAttentionSales] = useState<SaleListItem[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -111,12 +132,6 @@ export default function SalesPage() {
     useState<InstallmentFrequency>("weekly");
 
   const isCashOpen = cashSession?.status === "open";
-
-  const cashMessage = !cashSession
-    ? "Cash is not open. Open cash before creating sales."
-    : cashSession.status === "closed"
-      ? "Cash is closed. Sales are blocked."
-      : "";
 
   const activeProducts = useMemo(
     () => products.filter((product) => product.isActive),
@@ -221,6 +236,16 @@ export default function SalesPage() {
   }, [amountPaidRwf, paymentMode, totalAmountRwf]);
 
   const balanceRwf = Math.max(0, totalAmountRwf - finalAmountPaidRwf);
+  const cashPaymentNeedsDrawer =
+    paymentMethod === "cash" && finalAmountPaidRwf > 0;
+  const cashBlocksSale = cashPaymentNeedsDrawer && !isCashOpen;
+
+  const cashMessage = !cashSession
+    ? "Cash drawer is not open. Cash payments need an open cash drawer."
+    : cashSession.status === "closed"
+      ? "Cash drawer is closed. Choose MoMo, Bank, Card, Other, or open cash."
+      : "";
+
   const hasBelowMinimum = cartLines.some((line) => line.belowMinimum);
   const hasCart = cartLines.length > 0;
   const creditDisabledForWalkIn = customerType === "walk_in";
@@ -238,16 +263,26 @@ export default function SalesPage() {
     setMessage("");
 
     try {
-      const [productsResponse, customersResponse, cashResponse] =
-        await Promise.all([
-          getProducts(token),
-          getCustomers(token),
-          getCashToday(token),
-        ]);
+      const [
+        productsResponse,
+        customersResponse,
+        cashResponse,
+        salesSummaryResponse,
+        salesResponse,
+      ] = await Promise.all([
+        getProducts(token),
+        getCustomers(token),
+        getCashToday(token),
+        getSalesSummary(token),
+        getSales(token, { limit: 8 }),
+      ]);
 
       setProducts(productsResponse.products);
       setCustomers(customersResponse.customers);
       setCashSession(cashResponse.session);
+      setSalesSummary(salesSummaryResponse.summary);
+      setRecentSales(salesResponse.sales.length > 0 ? salesResponse.sales : salesSummaryResponse.recentSales);
+      setAttentionSales(salesSummaryResponse.needsAttention);
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Could not load sales page.",
@@ -413,8 +448,8 @@ export default function SalesPage() {
   async function handleCreateSale(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!isCashOpen) {
-      setMessage(cashMessage || "Open cash before creating sales.");
+    if (cashBlocksSale) {
+      setMessage(cashMessage || "Open cash drawer before taking cash payment.");
       return;
     }
 
@@ -555,9 +590,9 @@ export default function SalesPage() {
           </div>
         </section>
 
-        {!isCashOpen ? (
+        {cashBlocksSale ? (
           <NoticeCard
-            title="Selling is blocked"
+            title="Cash payment needs open drawer"
             text={cashMessage}
             actionLabel="Open cash"
             onAction={() => router.push("/cash")}
@@ -567,10 +602,124 @@ export default function SalesPage() {
             <CheckCircle2 size={20} />
             <div>
               <strong>Ready to sell</strong>
-              <span>Cash is open. Start by searching a product.</span>
+              <span>
+                {isCashOpen
+                  ? "Cash drawer is open. Cash and non-cash payments are allowed."
+                  : "Cash drawer is closed. Use MoMo, Bank, Card, Other, or debt without cash paid now."}
+              </span>
             </div>
           </section>
         )}
+
+        <section className={styles.ownerOverview}>
+          <div className={styles.overviewTop}>
+            <div>
+              <span className={styles.overviewKicker}>
+                <ReceiptText size={14} />
+                Owner first glance
+              </span>
+              <h2>Today&apos;s sales control</h2>
+              <p>
+                See today&apos;s sales, received money, balances, and sales that
+                need attention before creating another sale.
+              </p>
+            </div>
+
+            {attentionSales.length > 0 ? (
+              <span className="badge badge-blue">
+                {attentionSales.length} need attention
+              </span>
+            ) : (
+              <span className="badge badge-green">No sales issue</span>
+            )}
+          </div>
+
+          <div className={styles.salesStatsGrid}>
+            <SalesStat
+              label="Sales today"
+              value={formatRwf(salesSummary?.salesTodayRwf || 0)}
+              help={`${salesSummary?.salesTodayCount || 0} sale(s) created today`}
+            />
+            <SalesStat
+              label="Received today"
+              value={formatRwf(salesSummary?.receivedTodayRwf || 0)}
+              help="Money paid into today&apos;s sales"
+              good
+            />
+            <SalesStat
+              label="Open balance"
+              value={formatRwf(salesSummary?.openBalanceRwf || 0)}
+              help={`${salesSummary?.openBalanceCount || 0} customer balance(s)`}
+              warning={(salesSummary?.openBalanceRwf || 0) > 0}
+            />
+            <SalesStat
+              label="Unpaid / partial"
+              value={`${salesSummary?.unpaidCount || 0} / ${
+                salesSummary?.partialCount || 0
+              }`}
+              help="Sales that are not fully paid"
+              warning={
+                (salesSummary?.unpaidCount || 0) +
+                  (salesSummary?.partialCount || 0) >
+                0
+              }
+            />
+          </div>
+
+          <div className={styles.salesGlanceGrid}>
+            <section className={styles.glancePanel}>
+              <div className={styles.glancePanelTop}>
+                <div>
+                  <strong>Needs attention</strong>
+                  <span>Unpaid or partially paid sales.</span>
+                </div>
+              </div>
+
+              <div className={styles.saleMiniList}>
+                {attentionSales.slice(0, 4).map((sale) => (
+                  <SaleMiniRow
+                    key={sale.id}
+                    sale={sale}
+                    onOpen={() => router.push(`/sales/${sale.id}`)}
+                  />
+                ))}
+
+                {attentionSales.length === 0 ? (
+                  <div className={styles.cleanState}>
+                    <CheckCircle2 size={18} />
+                    <span>No unpaid sale needs attention right now.</span>
+                  </div>
+                ) : null}
+              </div>
+            </section>
+
+            <section className={styles.glancePanel}>
+              <div className={styles.glancePanelTop}>
+                <div>
+                  <strong>Recent sales</strong>
+                  <span>Latest sales created by the shop.</span>
+                </div>
+              </div>
+
+              <div className={styles.saleMiniList}>
+                {recentSales.slice(0, 4).map((sale) => (
+                  <SaleMiniRow
+                    key={sale.id}
+                    sale={sale}
+                    onOpen={() => router.push(`/sales/${sale.id}`)}
+                  />
+                ))}
+
+                {recentSales.length === 0 ? (
+                  <div className={styles.cleanState}>
+                    <ShoppingCart size={18} />
+                    <span>No sale has been created yet.</span>
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          </div>
+        </section>
 
         {message ? <div className={styles.messageBox}>{message}</div> : null}
 
@@ -594,8 +743,13 @@ export default function SalesPage() {
                 <input
                   value={productSearch}
                   onChange={(event) => setProductSearch(event.target.value)}
-                  placeholder="Search product..."
+                  placeholder={
+                    cashBlocksSale
+                      ? "Open cash drawer or choose another payment method"
+                      : "Search product..."
+                  }
                   autoComplete="off"
+                  disabled={cashBlocksSale}
                 />
               </div>
             </section>
@@ -1052,20 +1206,95 @@ export default function SalesPage() {
                 Reset
               </button>
 
-              <AsyncButton
-                form="sales-checkout-form"
-                loading={saving}
-                disabled={!isCashOpen || !hasCart || hasBelowMinimum}
-                type="submit"
-              >
-                <Plus size={15} />
-                Save sale
-              </AsyncButton>
+              {cashBlocksSale ? (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => router.push("/cash")}
+                >
+                  <WalletCards size={15} />
+                  Open cash first
+                </button>
+              ) : (
+                <AsyncButton
+                  form="sales-checkout-form"
+                  loading={saving}
+                  disabled={!hasCart || hasBelowMinimum}
+                  type="submit"
+                >
+                  <Plus size={15} />
+                  Save sale
+                </AsyncButton>
+              )}
             </div>
           </aside>
         </form>
       </div>
     </AppShell>
+  );
+}
+
+function SalesStat({
+  label,
+  value,
+  help,
+  good = false,
+  warning = false,
+}: {
+  label: string;
+  value: string;
+  help: string;
+  good?: boolean;
+  warning?: boolean;
+}) {
+  return (
+    <div
+      className={[
+        styles.salesStat,
+        good ? styles.salesStatGood : "",
+        warning ? styles.salesStatWarning : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>{help}</small>
+    </div>
+  );
+}
+
+function SaleMiniRow({
+  sale,
+  onOpen,
+}: {
+  sale: SaleListItem;
+  onOpen: () => void;
+}) {
+  const customerName =
+    sale.customerName || sale.walkInName || "Walk-in customer";
+  const hasBalance = Number(sale.balanceRwf || 0) > 0;
+
+  return (
+    <button className={styles.saleMiniRow} type="button" onClick={onOpen}>
+      <div className={styles.saleMiniMain}>
+        <strong>{sale.saleNumber}</strong>
+        <span>
+          {customerName} · {formatShortDate(sale.createdAt)}
+        </span>
+      </div>
+
+      <div className={styles.saleMiniMoney}>
+        <strong>{formatRwf(sale.totalAmountRwf)}</strong>
+        <span className={hasBalance ? styles.statusBad : styles.statusGood}>
+          {hasBalance
+            ? `Balance ${formatRwf(sale.balanceRwf)}`
+            : cleanLabel(sale.paymentStatus)}
+        </span>
+      </div>
+
+      <Eye size={15} />
+    </button>
   );
 }
 

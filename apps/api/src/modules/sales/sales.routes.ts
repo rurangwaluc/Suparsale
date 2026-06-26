@@ -11,7 +11,7 @@ import {
   stockMovements,
   users,
 } from "@techtrack/db";
-import { and, desc, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, lte, or } from "drizzle-orm";
 import {
   makeBusinessDate,
   requireOpenCashSession,
@@ -334,9 +334,14 @@ export async function salesRoutes(app: FastifyInstance) {
       const auth = request.authUser!;
       const data = parsed.data;
 
-      const cashControl = await requireOpenCashSession(reply);
+      const requiresCashDrawer =
+        data.payment.amountPaidRwf > 0 && data.payment.method === "cash";
 
-      if (!cashControl) {
+      const cashControl = requiresCashDrawer
+        ? await requireOpenCashSession(reply)
+        : null;
+
+      if (requiresCashDrawer && !cashControl) {
         return;
       }
 
@@ -636,8 +641,8 @@ export async function salesRoutes(app: FastifyInstance) {
           createdPayment = payment;
 
           await tx.insert(moneyLedger).values({
-            businessDate: cashControl.businessDate || makeBusinessDate(paidAt),
-            cashSessionId: cashControl.session.id,
+            businessDate: cashControl?.businessDate || makeBusinessDate(paidAt),
+            cashSessionId: cashControl?.session.id || null,
             direction: "money_in",
             amountRwf: amountPaidRwf,
             method: data.payment.method,
@@ -747,18 +752,48 @@ export async function salesRoutes(app: FastifyInstance) {
       const todayStart = startOfToday();
       const todayEnd = endOfToday();
 
-      const [summary] = await db
+      const allSalesForSummary = await db
         .select({
-          salesTodayCount: sql<number>`cast(count(case when ${sales.createdAt} between ${todayStart} and ${todayEnd} then 1 end) as int)`,
-          salesTodayRwf: sql<number>`coalesce(sum(case when ${sales.createdAt} between ${todayStart} and ${todayEnd} then ${sales.totalAmountRwf} else 0 end), 0)`,
-          receivedTodayRwf: sql<number>`coalesce(sum(case when ${sales.createdAt} between ${todayStart} and ${todayEnd} then ${sales.amountPaidRwf} else 0 end), 0)`,
-          openBalanceRwf: sql<number>`coalesce(sum(case when ${sales.balanceRwf} > 0 then ${sales.balanceRwf} else 0 end), 0)`,
-          openBalanceCount: sql<number>`cast(count(case when ${sales.balanceRwf} > 0 then 1 end) as int)`,
-          unpaidCount: sql<number>`cast(count(case when ${sales.paymentStatus} = 'unpaid' then 1 end) as int)`,
-          partialCount: sql<number>`cast(count(case when ${sales.paymentStatus} = 'partially_paid' then 1 end) as int)`,
-          totalSalesCount: sql<number>`cast(count(*) as int)`,
+          id: sales.id,
+          status: sales.status,
+          paymentStatus: sales.paymentStatus,
+          totalAmountRwf: sales.totalAmountRwf,
+          amountPaidRwf: sales.amountPaidRwf,
+          balanceRwf: sales.balanceRwf,
+          createdAt: sales.createdAt,
         })
         .from(sales);
+
+      const todaySales = allSalesForSummary.filter((sale) => {
+        const createdAt = new Date(sale.createdAt);
+        return createdAt >= todayStart && createdAt <= todayEnd;
+      });
+
+      const summary = {
+        salesTodayCount: todaySales.length,
+        salesTodayRwf: todaySales.reduce(
+          (sum, sale) => sum + Number(sale.totalAmountRwf || 0),
+          0,
+        ),
+        receivedTodayRwf: todaySales.reduce(
+          (sum, sale) => sum + Number(sale.amountPaidRwf || 0),
+          0,
+        ),
+        openBalanceRwf: allSalesForSummary.reduce(
+          (sum, sale) => sum + Math.max(0, Number(sale.balanceRwf || 0)),
+          0,
+        ),
+        openBalanceCount: allSalesForSummary.filter(
+          (sale) => Number(sale.balanceRwf || 0) > 0,
+        ).length,
+        unpaidCount: allSalesForSummary.filter(
+          (sale) => sale.paymentStatus === "unpaid",
+        ).length,
+        partialCount: allSalesForSummary.filter(
+          (sale) => sale.paymentStatus === "partially_paid",
+        ).length,
+        totalSalesCount: allSalesForSummary.length,
+      };
 
       const recentSales = await db
         .select({
@@ -791,16 +826,7 @@ export async function salesRoutes(app: FastifyInstance) {
 
       return {
         ok: true,
-        summary: summary || {
-          salesTodayCount: 0,
-          salesTodayRwf: 0,
-          receivedTodayRwf: 0,
-          openBalanceRwf: 0,
-          openBalanceCount: 0,
-          unpaidCount: 0,
-          partialCount: 0,
-          totalSalesCount: 0,
-        },
+        summary,
         recentSales,
         needsAttention,
       };

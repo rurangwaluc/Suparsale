@@ -64,6 +64,17 @@ export type SaleListItem = {
   soldByName: string | null;
 };
 
+export type SalesSummary = {
+  salesTodayCount: number;
+  salesTodayRwf: number;
+  receivedTodayRwf: number;
+  openBalanceRwf: number;
+  openBalanceCount: number;
+  unpaidCount: number;
+  partialCount: number;
+  totalSalesCount: number;
+};
+
 export type SaleDetail = {
   id: string;
   saleNumber: string;
@@ -141,6 +152,18 @@ export type CreatedSaleResponse = {
   installments: CustomerDebtInstallment[];
 };
 
+export type SalesSummaryResponse = {
+  ok: true;
+  summary: SalesSummary;
+  recentSales: SaleListItem[];
+  needsAttention: SaleListItem[];
+};
+
+export type SaleListResponse = {
+  ok: true;
+  sales: SaleListItem[];
+};
+
 export type SaleDetailResponse = {
   ok: true;
   sale: SaleDetail;
@@ -150,6 +173,30 @@ export type SaleDetailResponse = {
   installments: CustomerDebtInstallment[];
 };
 
+export type GetSalesQuery = {
+  search?: string;
+  status?: string;
+  paymentStatus?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+};
+
+function makeQueryString(query?: GetSalesQuery) {
+  if (!query) return "";
+
+  const params = new URLSearchParams();
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") return;
+    params.set(key, String(value));
+  });
+
+  const text = params.toString();
+
+  return text ? `?${text}` : "";
+}
+
 export async function createSale(token: string, input: CreateSaleInput) {
   return apiRequest<CreatedSaleResponse>("/sales", {
     method: "POST",
@@ -158,8 +205,15 @@ export async function createSale(token: string, input: CreateSaleInput) {
   });
 }
 
-export async function getSales(token: string) {
-  return apiRequest<{ ok: true; sales: SaleListItem[] }>("/sales", {
+export async function getSales(token: string, query?: GetSalesQuery) {
+  return apiRequest<SaleListResponse>(`/sales${makeQueryString(query)}`, {
+    method: "GET",
+    token,
+  });
+}
+
+export async function getSalesSummary(token: string) {
+  return apiRequest<SalesSummaryResponse>("/sales/summary", {
     method: "GET",
     token,
   });
@@ -171,7 +225,3 @@ export async function getSale(token: string, id: string) {
     token,
   });
 }
-
-
-
-
