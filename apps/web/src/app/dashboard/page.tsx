@@ -5,7 +5,6 @@ import {
   ArrowRight,
   Banknote,
   Boxes,
-  CalendarClock,
   CheckCircle2,
   Clock3,
   Loader2,
@@ -133,13 +132,6 @@ export default function DashboardPage() {
     [openDebts],
   );
 
-  const debtsDueToday = useMemo(() => {
-    return openDebts.filter((debt) => {
-      if (!debt.expectedPaymentAt) return false;
-      return localDateKey(debt.expectedPaymentAt) === businessDate;
-    });
-  }, [businessDate, openDebts]);
-
   const overdueDebts = useMemo(() => {
     return openDebts.filter((debt) => {
       if (!debt.expectedPaymentAt) return false;
@@ -191,6 +183,15 @@ export default function DashboardPage() {
     });
   }, [approvedExpenses, businessDate]);
 
+  const todayExpenseTotal = useMemo(
+    () =>
+      todayExpenses.reduce(
+        (sum, expense) => sum + Number(expense.amountRwf || 0),
+        0,
+      ),
+    [todayExpenses],
+  );
+
   const pendingExpenseTotal = useMemo(
     () =>
       pendingExpenses.reduce(
@@ -217,6 +218,7 @@ export default function DashboardPage() {
   const problemCount = useMemo(() => {
     let count = 0;
 
+    if (!isCashOpen) count += 1;
     count += lowStockProducts.length;
     count += overdueDebts.length;
     count += pendingExpenses.length;
@@ -228,6 +230,7 @@ export default function DashboardPage() {
   }, [
     cashReopenedToday,
     hasCashDifference,
+    isCashOpen,
     lowStockProducts.length,
     overdueDebts.length,
     pendingExpenses.length,
@@ -235,20 +238,19 @@ export default function DashboardPage() {
 
   const latestSales = useMemo(() => sales.slice(0, 4), [sales]);
   const topOpenDebts = useMemo(() => openDebts.slice(0, 4), [openDebts]);
-  const latestExpenses = useMemo(() => expenses.slice(0, 4), [expenses]);
-  const latestLedger = useMemo(() => ledger.slice(0, 6), [ledger]);
+  const latestLedger = useMemo(() => ledger.slice(0, 4), [ledger]);
 
   const shopStatusTitle = isCashOpen
-    ? "Shop is open. Selling is allowed."
+    ? "Shop is open"
     : cashNotOpened
-      ? "Cash is not open. Open cash before work starts."
-      : "Cash is closed. Selling and payments are blocked.";
+      ? "Cash is not open"
+      : "Cash is closed";
 
   const shopStatusHelp = isCashOpen
     ? `Expected cash in drawer is ${formatRwf(cashTotals.expectedCashRwf)}.`
     : cashNotOpened
-      ? "Open cash first so sales, payments, and expenses can be controlled."
-      : "Only the owner can reopen cash if correction is needed.";
+      ? "Open cash before sales, payments, and expenses start."
+      : "Selling and payments are blocked until cash is reopened.";
 
   const mainActionLabel = isCashOpen
     ? "Start selling"
@@ -336,71 +338,36 @@ export default function DashboardPage() {
     router.push("/cash");
   }
 
-  function goToSellingOrCash() {
-    if (isCashOpen) {
-      router.push("/sales");
-      return;
-    }
-
-    router.push("/cash");
-  }
-
-  function goToDebtPaymentOrCash() {
-    if (isCashOpen) {
-      router.push("/debts");
-      return;
-    }
-
-    router.push("/cash");
-  }
-
-  function goToExpenseOrCash() {
-    if (isCashOpen) {
-      router.push("/expenses");
-      return;
-    }
-
-    router.push("/cash");
-  }
-
   return (
     <AppShell title="Dashboard">
       <div className={styles.dashboardPage}>
-        <section className={`dashboard-hero ${styles.hero}`}>
+        <section className={styles.hero}>
           <div className={styles.heroCopy}>
-            <span className="hero-kicker dashboard-kicker">
+            <span className={styles.kicker}>
               <ShieldCheck size={15} />
-              Suparsale owner command center
+              Owner first-glance dashboard
             </span>
 
             <h1>Today at Suparsale Store</h1>
 
             <p>
-              Clean control for electronics stock, appliance sales, payments,
-              customer debts, expenses, and daily shop problems.
+              See the few numbers and problems that matter before you make a
+              decision.
             </p>
           </div>
 
-          <div className={`dashboard-hero-actions ${styles.heroActions}`}>
+          <div className={styles.heroActions}>
             <button
-              className="btn btn-primary"
+              className={styles.primaryButton}
               type="button"
               onClick={handleMainAction}
             >
               {mainActionLabel}
-              <ArrowRight size={14} />
+              <ArrowRight size={15} />
             </button>
 
             <button
-              className="btn btn-outline"
-              type="button"
-              onClick={() => router.push("/cash")}
-            >
-              Cash
-            </button>
-
-            <button
-              className="btn btn-outline"
+              className={styles.secondaryButton}
               type="button"
               onClick={loadDashboard}
             >
@@ -413,12 +380,12 @@ export default function DashboardPage() {
         {message ? <div className={styles.messageBox}>{message}</div> : null}
 
         <section
-          className={`${styles.statusPanel} ${
+          className={`${styles.statusCard} ${
             isCashOpen ? styles.statusOpen : styles.statusWarning
           }`}
         >
           <div className={styles.statusMain}>
-            <div className="feature-icon">
+            <div className={styles.statusIcon}>
               {isCashOpen ? (
                 <CheckCircle2 size={21} />
               ) : (
@@ -427,352 +394,160 @@ export default function DashboardPage() {
             </div>
 
             <div>
+              <span>Shop status</span>
               <strong>{shopStatusTitle}</strong>
-              <span>{shopStatusHelp}</span>
+              <p>{shopStatusHelp}</p>
             </div>
           </div>
 
-          <StatusMini label="Business date" value={businessDate} />
-          <StatusMini label="Sales today" value={formatRwf(todaySalesTotal)} />
-          <StatusMini
-            label="Money in"
-            value={formatRwf(cashTotals.moneyInRwf)}
-          />
-          <StatusMini
-            label="Needs attention"
-            value={String(problemCount)}
-            danger={problemCount > 0}
-          />
-        </section>
-
-        <section className={`table-card premium-panel ${styles.panel}`}>
-          <div className="table-card-header">
-            <div>
-              <div className="table-title">Owner attention center</div>
-              <div className="app-subtitle">
-                Check these before selling, restocking, or downloading reports.
-              </div>
-            </div>
-
-            {loading ? (
-              <Loader2
-                className="spin"
-                size={20}
-                style={{ color: "var(--blue)" }}
-              />
-            ) : (
-              <span
-                className={
-                  problemCount > 0 ? "badge badge-blue" : "badge badge-green"
-                }
-              >
-                {problemCount > 0
-                  ? `${problemCount} issue(s)`
-                  : "Everything clear"}
-              </span>
-            )}
-          </div>
-
-          <div className="attention-list">
-            {!isCashOpen ? (
-              <div className="attention-item">
-                <AlertTriangle size={17} />
-                <div>
-                  <strong>Cash is not open</strong>
-                  <span>
-                    Sales, debt payments, and paid expenses are blocked until
-                    cash is opened or reopened.
-                  </span>
-                </div>
-              </div>
-            ) : null}
-
-            {overdueDebts.length > 0 ? (
-              <div className="attention-item">
-                <WalletCards size={17} />
-                <div>
-                  <strong>
-                    {overdueDebts.length} overdue customer debt(s)
-                  </strong>
-                  <span>
-                    Customers promised to pay but the expected payment time has
-                    already passed.
-                  </span>
-                </div>
-              </div>
-            ) : null}
-
-            {debtsDueToday.length > 0 ? (
-              <div className="attention-item">
-                <CalendarClock size={17} />
-                <div>
-                  <strong>
-                    {debtsDueToday.length} customer payment(s) due today
-                  </strong>
-                  <span>Follow up before closing the day.</span>
-                </div>
-              </div>
-            ) : null}
-
-            {pendingExpenses.length > 0 ? (
-              <div className="attention-item">
-                <ReceiptText size={17} />
-                <div>
-                  <strong>
-                    {pendingExpenses.length} expense approval(s) waiting
-                  </strong>
-                  <span>
-                    Total waiting approval: {formatRwf(pendingExpenseTotal)}.
-                  </span>
-                </div>
-              </div>
-            ) : null}
-
-            {lowStockProducts.length > 0 ? (
-              <div className="attention-item">
-                <Boxes size={17} />
-                <div>
-                  <strong>
-                    {lowStockProducts.length} low-stock product(s)
-                  </strong>
-                  <span>
-                    Check stock before customers ask for unavailable items.
-                  </span>
-                </div>
-              </div>
-            ) : null}
-
-            {hasCashDifference ? (
-              <div className="attention-item">
-                <Banknote size={17} />
-                <div>
-                  <strong>Cash difference found</strong>
-                  <span>
-                    Closing difference:{" "}
-                    {formatRwf(cashSession?.differenceRwf || 0)}.
-                  </span>
-                </div>
-              </div>
-            ) : null}
-
-            {cashReopenedToday ? (
-              <div className="attention-item">
-                <Clock3 size={17} />
-                <div>
-                  <strong>Cash was reopened today</strong>
-                  <span>
-                    Review the cash proof and audit trail before closing.
-                  </span>
-                </div>
-              </div>
-            ) : null}
-
-            {problemCount === 0 && isCashOpen ? (
-              <div className="attention-item">
-                <CheckCircle2 size={17} />
-                <div>
-                  <strong>No urgent problem found</strong>
-                  <span>
-                    The shop looks clean right now. Keep selling and tracking.
-                  </span>
-                </div>
-              </div>
-            ) : null}
+          <div className={styles.statusMiniGrid}>
+            <StatusMini label="Date" value={businessDate} />
+            <StatusMini label="Problems" value={String(problemCount)} danger={problemCount > 0} />
+            <StatusMini label="Expected cash" value={formatRwf(cashTotals.expectedCashRwf)} />
           </div>
         </section>
 
-        <div className={styles.metricsGrid}>
-          <PremiumMetric
-            icon={<Banknote size={20} />}
+        <section className={styles.kpiGrid}>
+          <KpiCard
+            icon={<ShoppingCart size={19} />}
+            label="Sales today"
+            value={formatRwf(todaySalesTotal)}
+            help={`${todaySales.length} sale(s) recorded`}
+            tone="blue"
+          />
+
+          <KpiCard
+            icon={<Banknote size={19} />}
             label="Money received"
             value={formatRwf(cashTotals.moneyInRwf)}
-            help={`Cash ${formatRwf(cashTotals.cashInRwf)} · MoMo ${formatRwf(
-              cashTotals.momoInRwf,
-            )}`}
-            badge="Today"
-            badgeClass="badge badge-green"
+            help={`Paid today: ${formatRwf(todayPaidTotal)}`}
+            tone="green"
           />
 
-          <PremiumMetric
-            icon={<ReceiptText size={20} />}
-            label="Money spent"
-            value={formatRwf(cashTotals.moneyOutRwf)}
-            help={`${todayExpenses.length} approved expense(s) today`}
-            badge="Out"
-            badgeClass="badge badge-blue"
-          />
-
-          <PremiumMetric
-            icon={<WalletCards size={20} />}
-            label="Net money movement"
-            value={formatRwf(netMoneyMovement)}
-            help="Money received minus money spent"
-            badge="Net"
-            badgeClass={
-              netMoneyMovement >= 0 ? "badge badge-green" : "badge badge-blue"
-            }
-          />
-
-          <PremiumMetric
-            icon={<Banknote size={20} />}
-            label="Expected cash"
-            value={formatRwf(cashTotals.expectedCashRwf)}
-            help="Opening float + cash in - cash out"
-            badge={cashSession?.status || "Not opened"}
-            badgeClass={
-              isCashOpen
-                ? "badge badge-green"
-                : isCashClosed
-                  ? "badge badge-blue"
-                  : "badge badge-blue"
-            }
-          />
-        </div>
-
-        <div className={styles.metricsGrid}>
-          <PremiumMetric
-            icon={<ShoppingCart size={20} />}
-            label="Today sales"
-            value={formatRwf(todaySalesTotal)}
-            help={`${todaySales.length} sale(s), ${formatRwf(todayPaidTotal)} paid`}
-            badge="Sales"
-            badgeClass="badge badge-green"
-          />
-
-          <PremiumMetric
-            icon={<Users size={20} />}
-            label="Open customer debts"
+          <KpiCard
+            icon={<WalletCards size={19} />}
+            label="Customer debts"
             value={formatRwf(openDebtTotal)}
-            help={`${openDebts.length} customer(s) still owe money`}
-            badge="Pay later"
-            badgeClass="badge badge-blue"
+            help={`${openDebts.length} open · ${overdueDebts.length} overdue`}
+            tone={overdueDebts.length > 0 ? "danger" : "blue"}
           />
 
-          <PremiumMetric
-            icon={<Boxes size={20} />}
+          <KpiCard
+            icon={<Boxes size={19} />}
             label="Stock value"
             value={formatRwf(stockValue)}
             help={`${lowStockProducts.length} low-stock product(s)`}
-            badge="Stock"
-            badgeClass="badge badge-blue"
+            tone={lowStockProducts.length > 0 ? "danger" : "blue"}
           />
+        </section>
 
-          <PremiumMetric
-            icon={<ReceiptText size={20} />}
-            label="Pending expenses"
-            value={formatRwf(pendingExpenseTotal)}
-            help={`${pendingExpenses.length} waiting owner review`}
-            badge="Approval"
-            badgeClass={
-              pendingExpenses.length > 0
-                ? "badge badge-blue"
-                : "badge badge-green"
-            }
-          />
-        </div>
+        <section className={styles.ownerGrid}>
+          <div className={styles.focusPanel}>
+            <PanelHeader
+              title="What needs attention"
+              subtitle="Fix these first. Ignore everything else until these are clear."
+              right={
+                loading ? (
+                  <Loader2 className="spin" size={18} />
+                ) : (
+                  <span
+                    className={
+                      problemCount > 0 ? styles.dangerBadge : styles.goodBadge
+                    }
+                  >
+                    {problemCount > 0 ? `${problemCount} issue(s)` : "Clear"}
+                  </span>
+                )
+              }
+            />
 
-        <div className={styles.dashboardGrid}>
-          <section className="table-card premium-panel">
-            <div className="table-card-header">
-              <div>
-                <div className="table-title">Quick actions</div>
-                <div className="app-subtitle">
-                  The next action should always be obvious.
-                </div>
-              </div>
+            <div className={styles.issueList}>
+              {!isCashOpen ? (
+                <IssueItem
+                  icon={<AlertTriangle size={17} />}
+                  title="Cash is not open"
+                  text="Sales, payments, and paid expenses need cash opened first."
+                />
+              ) : null}
+
+              {overdueDebts.length > 0 ? (
+                <IssueItem
+                  icon={<WalletCards size={17} />}
+                  title={`${overdueDebts.length} overdue debt(s)`}
+                  text="Follow up customers who passed their promised payment time."
+                />
+              ) : null}
+
+              {pendingExpenses.length > 0 ? (
+                <IssueItem
+                  icon={<ReceiptText size={17} />}
+                  title={`${pendingExpenses.length} expense approval(s)`}
+                  text={`Waiting owner review: ${formatRwf(pendingExpenseTotal)}.`}
+                />
+              ) : null}
+
+              {lowStockProducts.length > 0 ? (
+                <IssueItem
+                  icon={<Boxes size={17} />}
+                  title={`${lowStockProducts.length} low-stock product(s)`}
+                  text="Restock before customers ask for unavailable products."
+                />
+              ) : null}
+
+              {hasCashDifference ? (
+                <IssueItem
+                  icon={<Banknote size={17} />}
+                  title="Cash difference found"
+                  text={`Closing difference: ${formatRwf(
+                    cashSession?.differenceRwf || 0,
+                  )}.`}
+                />
+              ) : null}
+
+              {cashReopenedToday ? (
+                <IssueItem
+                  icon={<Clock3 size={17} />}
+                  title="Cash was reopened today"
+                  text="Review the cash proof and audit trail before closing."
+                />
+              ) : null}
+
+              {problemCount === 0 ? (
+                <IssueItem
+                  icon={<CheckCircle2 size={17} />}
+                  title="No urgent problem found"
+                  text="The shop looks clean right now."
+                />
+              ) : null}
+            </div>
+          </div>
+
+          <div className={styles.moneyPanel}>
+            <PanelHeader
+              title="Money today"
+              subtitle="Simple cash movement view."
+            />
+
+            <div className={styles.moneyRows}>
+              <MoneyRow label="Received" value={cashTotals.moneyInRwf} />
+              <MoneyRow label="Spent" value={cashTotals.moneyOutRwf} />
+              <MoneyRow label="Net movement" value={netMoneyMovement} strong />
+              <MoneyRow label="Expenses today" value={todayExpenseTotal} />
             </div>
 
-            <div className="quick-actions-grid">
-              <button
-                className="quick-action"
-                type="button"
-                onClick={goToSellingOrCash}
-              >
-                <Banknote size={18} />
-                <span>{isCashOpen ? "Sell product" : "Open cash first"}</span>
-                <small>
-                  {isCashOpen
-                    ? "Paid now, pay later, or installments"
-                    : "Selling is blocked until cash opens"}
-                </small>
-              </button>
-
-              <button
-                className="quick-action"
-                type="button"
-                onClick={() => router.push("/inventory")}
-              >
-                <Boxes size={18} />
-                <span>Add stock</span>
-                <small>New arrivals and damaged items</small>
-              </button>
-
-              <button
-                className="quick-action"
-                type="button"
-                onClick={goToDebtPaymentOrCash}
-              >
-                <Users size={18} />
-                <span>{isCashOpen ? "Record payment" : "Open cash first"}</span>
-                <small>
-                  {isCashOpen
-                    ? "Customer pays debt or installment"
-                    : "Payments are blocked until cash opens"}
-                </small>
-              </button>
-
-              <button
-                className="quick-action"
-                type="button"
-                onClick={goToExpenseOrCash}
-              >
-                <ReceiptText size={18} />
-                <span>{isCashOpen ? "Record expense" : "Open cash first"}</span>
-                <small>
-                  {isCashOpen
-                    ? "Money out with proof"
-                    : "Expenses are blocked until cash opens"}
-                </small>
-              </button>
-            </div>
-          </section>
-
-          <section className="table-card premium-panel">
-            <div className="table-card-header">
-              <div>
-                <div className="table-title">Payment method breakdown</div>
-                <div className="app-subtitle">
-                  Simple view of how money entered the shop.
-                </div>
-              </div>
-            </div>
-
-            <div className="attention-list">
-              <BreakdownRow
-                label="Cash"
-                valueIn={cashTotals.cashInRwf}
-                valueOut={cashTotals.cashOutRwf}
-              />
-              <BreakdownRow
-                label="MoMo"
-                valueIn={cashTotals.momoInRwf}
-                valueOut={cashTotals.momoOutRwf}
-              />
-              <BreakdownRow
-                label="Bank"
-                valueIn={cashTotals.bankInRwf}
-                valueOut={cashTotals.bankOutRwf}
-              />
-              <BreakdownRow
-                label="Card / Other"
-                valueIn={cashTotals.cardInRwf + cashTotals.otherInRwf}
-                valueOut={cashTotals.cardOutRwf + cashTotals.otherOutRwf}
+            <div className={styles.methodGrid}>
+              <MethodMini label="Cash" value={cashTotals.cashInRwf} />
+              <MethodMini label="MoMo" value={cashTotals.momoInRwf} />
+              <MethodMini label="Bank" value={cashTotals.bankInRwf} />
+              <MethodMini
+                label="Card/Other"
+                value={cashTotals.cardInRwf + cashTotals.otherInRwf}
               />
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
 
-        <div className={styles.dashboardGrid}>
+        <section className={styles.activityGrid}>
           <ActivityPanel
             title="Latest sales"
             subtitle="Recent products sold."
@@ -780,66 +555,32 @@ export default function DashboardPage() {
             emptyText="Sales will appear here after selling starts."
           >
             {latestSales.map((sale) => (
-              <div key={sale.id} className="attention-item">
-                <ShoppingCart size={17} />
-                <div>
-                  <strong>{sale.saleNumber}</strong>
-                  <span>
-                    {sale.customerName || sale.walkInName || "Walk-in customer"}{" "}
-                    · {formatRwf(sale.totalAmountRwf)}
-                  </span>
-                  <span>
-                    Paid: {formatRwf(sale.amountPaidRwf)} · Balance:{" "}
-                    {formatRwf(sale.balanceRwf)}
-                  </span>
-                </div>
-              </div>
+              <IssueItem
+                key={sale.id}
+                icon={<ShoppingCart size={17} />}
+                title={`${sale.saleNumber} · ${formatRwf(sale.totalAmountRwf)}`}
+                text={`${sale.customerName || sale.walkInName || "Walk-in customer"} · Paid ${formatRwf(
+                  sale.amountPaidRwf,
+                )} · Balance ${formatRwf(sale.balanceRwf)}`}
+              />
             ))}
           </ActivityPanel>
 
           <ActivityPanel
-            title="Open debts"
+            title="Debts to follow"
             subtitle="Customers who still owe money."
             emptyTitle="No open debts"
             emptyText="No customer debt is currently open."
           >
             {topOpenDebts.map((debt) => (
-              <div key={debt.id} className="attention-item">
-                <WalletCards size={17} />
-                <div>
-                  <strong>{debt.customerName}</strong>
-                  <span>
-                    Balance: {formatRwf(debt.balanceRwf)} · Sale:{" "}
-                    {debt.saleNumber || "No sale number"}
-                  </span>
-                  <span>Expected: {formatDate(debt.expectedPaymentAt)}</span>
-                </div>
-              </div>
-            ))}
-          </ActivityPanel>
-        </div>
-
-        <div className={styles.dashboardGrid}>
-          <ActivityPanel
-            title="Latest expenses"
-            subtitle="Recent shop costs and approvals."
-            emptyTitle="No expenses yet"
-            emptyText="Expenses will appear here after recording costs."
-          >
-            {latestExpenses.map((expense) => (
-              <div key={expense.id} className="attention-item">
-                <ReceiptText size={17} />
-                <div>
-                  <strong>
-                    {expense.expenseNumber} · {expense.title}
-                  </strong>
-                  <span>
-                    {expense.categoryNameSnapshot} ·{" "}
-                    {formatRwf(expense.amountRwf)} · {expense.method}
-                  </span>
-                  <span>Status: {expense.status}</span>
-                </div>
-              </div>
+              <IssueItem
+                key={debt.id}
+                icon={<Users size={17} />}
+                title={`${debt.customerName} · ${formatRwf(debt.balanceRwf)}`}
+                text={`Sale: ${debt.saleNumber || "No sale number"} · Expected: ${formatDate(
+                  debt.expectedPaymentAt,
+                )}`}
+              />
             ))}
           </ActivityPanel>
 
@@ -850,60 +591,43 @@ export default function DashboardPage() {
             emptyText="Money proof appears after sales, payments, expenses, or cash actions."
           >
             {latestLedger.map((entry) => (
-              <div key={entry.id} className="attention-item">
-                <Banknote size={17} />
-                <div>
-                  <strong>
-                    {entry.direction === "money_in"
-                      ? "Money received"
-                      : entry.direction === "money_out"
-                        ? "Money spent"
-                        : "Cash note"}{" "}
-                    · {formatRwf(entry.amountRwf)}
-                  </strong>
-                  <span>
-                    {entry.category} · {entry.method} ·{" "}
-                    {formatDate(entry.happenedAt)}
-                  </span>
-                  <span>{entry.description || "No description"}</span>
-                </div>
-              </div>
+              <IssueItem
+                key={entry.id}
+                icon={<Banknote size={17} />}
+                title={`${entry.direction === "money_in" ? "Received" : entry.direction === "money_out" ? "Spent" : "Cash note"} · ${formatRwf(
+                  entry.amountRwf,
+                )}`}
+                text={`${entry.category} · ${entry.method} · ${formatDate(
+                  entry.happenedAt,
+                )}`}
+              />
             ))}
           </ActivityPanel>
-        </div>
+        </section>
       </div>
     </AppShell>
   );
 }
 
-type PremiumMetricProps = {
+type KpiCardProps = {
   icon: ReactNode;
   label: string;
   value: string;
   help: string;
-  badge: string;
-  badgeClass: string;
+  tone: "blue" | "green" | "danger";
 };
 
-function PremiumMetric({
-  icon,
-  label,
-  value,
-  help,
-  badge,
-  badgeClass,
-}: PremiumMetricProps) {
+function KpiCard({ icon, label, value, help, tone }: KpiCardProps) {
   return (
-    <div className={`premium-stat-card ${styles.metricCard}`}>
-      <div className="stat-card-top">
-        <div className="feature-icon">{icon}</div>
-        <span className={badgeClass}>{badge}</span>
+    <article className={`${styles.kpiCard} ${styles[`tone${tone}`]}`}>
+      <div className={styles.kpiTop}>
+        <div className={styles.kpiIcon}>{icon}</div>
+        <span>{label}</span>
       </div>
 
-      <div className="stat-label">{label}</div>
-      <div className={styles.metricValue}>{value}</div>
-      <div className="stat-help">{help}</div>
-    </div>
+      <strong>{value}</strong>
+      <p>{help}</p>
+    </article>
   );
 }
 
@@ -916,28 +640,74 @@ type StatusMiniProps = {
 function StatusMini({ label, value, danger = false }: StatusMiniProps) {
   return (
     <div className={styles.statusMini}>
-      <div>{label}</div>
+      <span>{label}</span>
       <strong className={danger ? styles.dangerText : ""}>{value}</strong>
     </div>
   );
 }
 
-type BreakdownRowProps = {
-  label: string;
-  valueIn: number;
-  valueOut: number;
+type PanelHeaderProps = {
+  title: string;
+  subtitle: string;
+  right?: ReactNode;
 };
 
-function BreakdownRow({ label, valueIn, valueOut }: BreakdownRowProps) {
+function PanelHeader({ title, subtitle, right }: PanelHeaderProps) {
   return (
-    <div className="attention-item">
-      <Banknote size={17} />
+    <div className={styles.panelHeader}>
       <div>
-        <strong>{label}</strong>
-        <span>
-          Received: {formatRwf(valueIn)} · Spent: {formatRwf(valueOut)}
-        </span>
+        <h2>{title}</h2>
+        <p>{subtitle}</p>
       </div>
+
+      {right ? <div className={styles.panelRight}>{right}</div> : null}
+    </div>
+  );
+}
+
+type IssueItemProps = {
+  icon: ReactNode;
+  title: string;
+  text: string;
+};
+
+function IssueItem({ icon, title, text }: IssueItemProps) {
+  return (
+    <div className={styles.issueItem}>
+      <div className={styles.issueIcon}>{icon}</div>
+      <div>
+        <strong>{title}</strong>
+        <span>{text}</span>
+      </div>
+    </div>
+  );
+}
+
+type MoneyRowProps = {
+  label: string;
+  value: number;
+  strong?: boolean;
+};
+
+function MoneyRow({ label, value, strong = false }: MoneyRowProps) {
+  return (
+    <div className={strong ? styles.moneyRowStrong : styles.moneyRow}>
+      <span>{label}</span>
+      <strong>{formatRwf(value)}</strong>
+    </div>
+  );
+}
+
+type MethodMiniProps = {
+  label: string;
+  value: number;
+};
+
+function MethodMini({ label, value }: MethodMiniProps) {
+  return (
+    <div className={styles.methodMini}>
+      <span>{label}</span>
+      <strong>{formatRwf(value)}</strong>
     </div>
   );
 }
@@ -962,31 +732,20 @@ function ActivityPanel({
     : Boolean(children);
 
   return (
-    <section className="table-card premium-panel">
-      <div className="table-card-header">
-        <div>
-          <div className="table-title">{title}</div>
-          <div className="app-subtitle">{subtitle}</div>
-        </div>
-      </div>
+    <section className={styles.activityPanel}>
+      <PanelHeader title={title} subtitle={subtitle} />
 
-      <div className="attention-list">
+      <div className={styles.issueList}>
         {hasChildren ? (
           children
         ) : (
-          <div className="attention-item">
-            <ShieldCheck size={17} />
-            <div>
-              <strong>{emptyTitle}</strong>
-              <span>{emptyText}</span>
-            </div>
-          </div>
+          <IssueItem
+            icon={<ShieldCheck size={17} />}
+            title={emptyTitle}
+            text={emptyText}
+          />
         )}
       </div>
     </section>
   );
 }
-
-
-
-
