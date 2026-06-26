@@ -13,7 +13,7 @@ export type StockArrival = {
   itemCount: number;
   totalQuantityReceived: number;
   totalDamagedQuantity: number;
-  totalCostRwf: number;
+  totalCostRwf?: number;
 };
 
 export type StockArrivalItem = {
@@ -25,8 +25,8 @@ export type StockArrivalItem = {
   model: string | null;
   quantityReceived: number;
   damagedQuantity: number;
-  unitCostRwf: number;
-  totalCostRwf: number;
+  unitCostRwf?: number;
+  totalCostRwf?: number;
   note: string | null;
 };
 
@@ -56,7 +56,7 @@ export type CreateStockArrivalInput = {
     productId: string;
     quantityReceived: number;
     damagedQuantity: number;
-    unitCostRwf: number;
+    unitCostRwf?: number;
     note?: string;
   }[];
 };

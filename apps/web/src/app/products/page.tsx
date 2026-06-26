@@ -192,9 +192,9 @@ export default function ProductsPage() {
     setBrand(product.brand || "");
     setModel(product.model || "");
     setDescription(product.description || "");
-    setBuyingPriceRwf(String(product.buyingPriceRwf));
+    setBuyingPriceRwf(String(product.buyingPriceRwf || 0));
     setSellingPriceRwf(String(product.sellingPriceRwf));
-    setMinSellingPriceRwf(String(product.minSellingPriceRwf));
+    setMinSellingPriceRwf(String(product.minSellingPriceRwf || 0));
     setLowStockAlert(String(product.lowStockAlert));
     setWarrantyText(product.warrantyText || "");
     setPriceReason("Owner product update");
@@ -618,7 +618,7 @@ export default function ProductsPage() {
                   warrantyText={warrantyText}
                   priceReason={priceReason}
                   categories={categories}
-                  canEditPrices={modalMode === "create" || canEditPrices}
+                  canEditPrices={canEditPrices}
                   setName={setName}
                   setSku={setSku}
                   setCategoryName={setCategoryName}
@@ -814,6 +814,17 @@ function ProductForm({
               min={0}
             />
           </label>
+
+          <label className="staff-form-group">
+            <span>Selling price</span>
+            <input
+              type="number"
+              value={sellingPriceRwf}
+              onChange={(event) => setSellingPriceRwf(event.target.value)}
+              min={0}
+              required
+            />
+          </label>
         </div>
 
         <label className="staff-form-group">
@@ -837,7 +848,7 @@ function ProductForm({
 
       {canEditPrices ? (
         <section className={styles.formSection}>
-          <div className="staff-form-section-title">Prices</div>
+          <div className="staff-form-section-title">Owner cost controls</div>
 
           <div className="staff-form-grid">
             <label className="staff-form-group">
@@ -846,16 +857,6 @@ function ProductForm({
                 type="number"
                 value={buyingPriceRwf}
                 onChange={(event) => setBuyingPriceRwf(event.target.value)}
-                min={0}
-              />
-            </label>
-
-            <label className="staff-form-group">
-              <span>Selling price</span>
-              <input
-                type="number"
-                value={sellingPriceRwf}
-                onChange={(event) => setSellingPriceRwf(event.target.value)}
                 min={0}
               />
             </label>

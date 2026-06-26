@@ -7,9 +7,9 @@ export type Product = {
   brand: string | null;
   model: string | null;
   description: string | null;
-  buyingPriceRwf: number;
+  buyingPriceRwf?: number;
   sellingPriceRwf: number;
-  minSellingPriceRwf: number;
+  minSellingPriceRwf?: number;
   currentStock: number;
   lowStockAlert: number;
   warrantyText: string | null;
@@ -17,6 +17,12 @@ export type Product = {
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
+  isLowStock?: boolean;
+  isOutOfStock?: boolean;
+  estimatedProfitPerItemRwf?: number;
+  stockCostValueRwf?: number;
+  stockSellingValueRwf?: number;
+  estimatedStockProfitRwf?: number;
   categoryName: string | null;
 };
 
@@ -36,9 +42,9 @@ export type ProductInput = {
   brand?: string;
   model?: string;
   description?: string;
-  buyingPriceRwf: number;
+  buyingPriceRwf?: number;
   sellingPriceRwf: number;
-  minSellingPriceRwf: number;
+  minSellingPriceRwf?: number;
   lowStockAlert: number;
   warrantyText?: string;
 };

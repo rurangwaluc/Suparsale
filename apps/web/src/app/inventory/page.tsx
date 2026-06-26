@@ -119,6 +119,7 @@ export default function InventoryPage() {
   const [items, setItems] = useState<ArrivalItemForm[]>([makeRow()]);
 
   const canReceiveStock = hasPermission(user, "stock.receive");
+  const isOwner = user?.role === "owner";
 
   const activeProducts = useMemo(
     () => products.filter((product) => product.isActive),
@@ -150,6 +151,15 @@ export default function InventoryPage() {
         0,
       ),
     [arrivals],
+  );
+
+  const lowStockProducts = useMemo(
+    () =>
+      products.filter(
+        (product) =>
+          product.isActive && product.currentStock <= product.lowStockAlert,
+      ),
+    [products],
   );
 
   const filteredArrivals = useMemo(() => {
@@ -504,14 +514,29 @@ export default function InventoryPage() {
             }
           />
 
-          <MetricCard
-            icon={<CheckCircle2 size={20} />}
-            label="Stock value"
-            value={formatRwf(totalArrivalCost)}
-            help="Recorded value of received stock"
-            badge="Value"
-            badgeClass="badge badge-blue"
-          />
+          {isOwner ? (
+            <MetricCard
+              icon={<CheckCircle2 size={20} />}
+              label="Stock value"
+              value={formatRwf(totalArrivalCost)}
+              help="Recorded value of received stock"
+              badge="Value"
+              badgeClass="badge badge-blue"
+            />
+          ) : (
+            <MetricCard
+              icon={<AlertTriangle size={20} />}
+              label="Low stock"
+              value={String(lowStockProducts.length)}
+              help="Products at or below alert quantity"
+              badge="Check"
+              badgeClass={
+                lowStockProducts.length > 0
+                  ? "badge badge-blue"
+                  : "badge badge-green"
+              }
+            />
+          )}
         </div>
 
         {message ? <div className={styles.messageBox}>{message}</div> : null}
@@ -563,11 +588,16 @@ export default function InventoryPage() {
           </div>
 
           <div className={styles.responsiveList}>
-            <div className={styles.listHeader}>
+            <div
+              className={cx(
+                styles.listHeader,
+                !isOwner && styles.listHeaderNoCost,
+              )}
+            >
               <span>Shipment</span>
               <span>Qty</span>
               <span>Damage</span>
-              <span>Cost</span>
+              {isOwner ? <span>Cost</span> : null}
               <span>Action</span>
             </div>
 
@@ -575,7 +605,10 @@ export default function InventoryPage() {
               const damaged = Number(arrival.totalDamagedQuantity || 0);
 
               return (
-                <article key={arrival.id} className={styles.listRow}>
+                <article
+                  key={arrival.id}
+                  className={cx(styles.listRow, !isOwner && styles.listRowNoCost)}
+                >
                   <div className={styles.primaryCell}>
                     <div className={styles.avatarIcon}>
                       <Truck size={17} />
@@ -602,10 +635,12 @@ export default function InventoryPage() {
                     <strong>{damaged}</strong>
                   </div>
 
-                  <div className={styles.dataCell}>
-                    <span>Cost</span>
-                    <strong>{formatRwf(arrival.totalCostRwf)}</strong>
-                  </div>
+                  {isOwner ? (
+                    <div className={styles.dataCell}>
+                      <span>Cost</span>
+                      <strong>{formatRwf(arrival.totalCostRwf || 0)}</strong>
+                    </div>
+                  ) : null}
 
                   <div className={styles.actionCell}>
                     <button
@@ -821,10 +856,12 @@ export default function InventoryPage() {
                         arrivalFormTotals.damaged > 0 ? "warning" : "success"
                       }
                     />
-                    <MiniInfo
-                      label="Cost"
-                      value={formatRwf(arrivalFormTotals.cost)}
-                    />
+                    {isOwner ? (
+                      <MiniInfo
+                        label="Cost"
+                        value={formatRwf(arrivalFormTotals.cost)}
+                      />
+                    ) : null}
                   </div>
                 </section>
 
@@ -982,9 +1019,11 @@ export default function InventoryPage() {
                             >
                               Damaged: {damagedQuantity}
                             </span>
-                            <span className="badge badge-blue">
-                              Cost: {formatRwf(totalCost)}
-                            </span>
+                            {isOwner ? (
+                              <span className="badge badge-blue">
+                                Cost: {formatRwf(totalCost)}
+                              </span>
+                            ) : null}
                             {product ? (
                               <span className="badge badge-blue">
                                 Current stock: {product.currentStock}
@@ -1115,11 +1154,11 @@ export default function InventoryPage() {
                             />
                             <MiniInfo
                               label="Unit cost"
-                              value={formatRwf(item.unitCostRwf)}
+                              value={formatRwf(item.unitCostRwf || 0)}
                             />
                             <MiniInfo
                               label="Total"
-                              value={formatRwf(item.totalCostRwf)}
+                              value={formatRwf(item.totalCostRwf || 0)}
                             />
                           </div>
                         </article>
