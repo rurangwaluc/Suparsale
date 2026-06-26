@@ -747,3 +747,63 @@
 .listRowNoCost {
   grid-template-columns: minmax(0, 1.8fr) 0.55fr 0.65fr 0.6fr;
 }
+
+.productPicker {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.productResults {
+  display: grid;
+  gap: 7px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--gray-50);
+}
+
+.productResult,
+.productResultSelected {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  text-align: left;
+  padding: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.productResult {
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.productResultSelected {
+  border: 1px solid rgba(34, 197, 94, 0.34);
+  background: var(--green-lt);
+}
+
+.productResult strong,
+.productResultSelected strong {
+  color: var(--gray-900);
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.25;
+}
+
+.productResult span,
+.productResultSelected span,
+.noProductResult {
+  color: var(--gray-500);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.noProductResult {
+  padding: 10px;
+}

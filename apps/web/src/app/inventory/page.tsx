@@ -36,6 +36,7 @@ import styles from "./page.module.css";
 type ArrivalItemForm = {
   rowId: string;
   productId: string;
+  productSearch: string;
   quantityReceived: string;
   damagedQuantity: string;
   unitCostRwf: string;
@@ -80,6 +81,7 @@ function makeRow(): ArrivalItemForm {
   return {
     rowId: crypto.randomUUID(),
     productId: "",
+    productSearch: "",
     quantityReceived: "1",
     damagedQuantity: "0",
     unitCostRwf: "0",
@@ -113,7 +115,7 @@ export default function InventoryPage() {
     items: [],
   });
 
-  const [sourceName, setSourceName] = useState("Dubai shipment");
+  const [sourceName, setSourceName] = useState("Suparsale supplier");
   const [shipmentReference, setShipmentReference] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<ArrivalItemForm[]>([makeRow()]);
@@ -269,7 +271,7 @@ export default function InventoryPage() {
   }
 
   function resetArrivalForm() {
-    setSourceName("Dubai shipment");
+    setSourceName("Suparsale supplier");
     setShipmentReference("");
     setNotes("");
     setItems([makeRow()]);
@@ -801,7 +803,7 @@ export default function InventoryPage() {
                     <input
                       value={sourceName}
                       onChange={(event) => setSourceName(event.target.value)}
-                      placeholder="Example: Dubai shipment"
+                      placeholder="Example: Suparsale supplier"
                     />
                   </label>
 
@@ -915,31 +917,111 @@ export default function InventoryPage() {
                           </div>
 
                           <div className={styles.itemFormGrid}>
-                            <label className="staff-form-group">
-                              <span>Product</span>
-                              <select
-                                value={item.productId}
-                                onChange={(event) =>
-                                  updateItem(
-                                    item.rowId,
-                                    "productId",
-                                    event.target.value,
-                                  )
-                                }
-                                required
-                              >
-                                <option value="">Choose product</option>
-                                {activeProducts.map((productItem) => (
-                                  <option
-                                    key={productItem.id}
-                                    value={productItem.id}
-                                  >
-                                    {productItem.name} · {productItem.sku} ·
-                                    Stock: {productItem.currentStock}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
+                            <div className={styles.productPicker}>
+                              <label className="staff-form-group">
+                                <span>Product</span>
+                                <input
+                                  value={item.productSearch}
+                                  onChange={(event) => {
+                                    updateItem(
+                                      item.rowId,
+                                      "productSearch",
+                                      event.target.value,
+                                    );
+                                    updateItem(item.rowId, "productId", "");
+                                  }}
+                                  placeholder="Type product name, SKU, brand, or category"
+                                  required={!item.productId}
+                                />
+                              </label>
+
+                              {item.productSearch.trim() ? (
+                                <div className={styles.productResults}>
+                                  {activeProducts
+                                    .filter((productItem) => {
+                                      const term = item.productSearch
+                                        .trim()
+                                        .toLowerCase();
+
+                                      return (
+                                        productItem.name
+                                          .toLowerCase()
+                                          .includes(term) ||
+                                        productItem.sku
+                                          .toLowerCase()
+                                          .includes(term) ||
+                                        (productItem.brand || "")
+                                          .toLowerCase()
+                                          .includes(term) ||
+                                        (productItem.model || "")
+                                          .toLowerCase()
+                                          .includes(term) ||
+                                        (productItem.categoryName || "")
+                                          .toLowerCase()
+                                          .includes(term)
+                                      );
+                                    })
+                                    .slice(0, 8)
+                                    .map((productItem) => (
+                                      <button
+                                        key={productItem.id}
+                                        type="button"
+                                        className={
+                                          item.productId === productItem.id
+                                            ? styles.productResultSelected
+                                            : styles.productResult
+                                        }
+                                        onClick={() => {
+                                          updateItem(
+                                            item.rowId,
+                                            "productId",
+                                            productItem.id,
+                                          );
+                                          updateItem(
+                                            item.rowId,
+                                            "productSearch",
+                                            `${productItem.name} · ${productItem.sku}`,
+                                          );
+                                        }}
+                                      >
+                                        <strong>{productItem.name}</strong>
+                                        <span>
+                                          {productItem.sku} · Stock:{" "}
+                                          {productItem.currentStock}
+                                        </span>
+                                      </button>
+                                    ))}
+
+                                  {activeProducts.filter((productItem) => {
+                                    const term = item.productSearch
+                                      .trim()
+                                      .toLowerCase();
+
+                                    return (
+                                      productItem.name
+                                        .toLowerCase()
+                                        .includes(term) ||
+                                      productItem.sku
+                                        .toLowerCase()
+                                        .includes(term) ||
+                                      (productItem.brand || "")
+                                        .toLowerCase()
+                                        .includes(term) ||
+                                      (productItem.model || "")
+                                        .toLowerCase()
+                                        .includes(term) ||
+                                      (productItem.categoryName || "")
+                                        .toLowerCase()
+                                        .includes(term)
+                                    );
+                                  }).length === 0 ? (
+                                    <div className={styles.noProductResult}>
+                                      No matching product. Add it first from Products.
+                                    </div>
+                                  ) : null}
+                                </div>
+                              ) : null}
+                            </div>
 
                             <label className="staff-form-group">
                               <span>Quantity received</span>
