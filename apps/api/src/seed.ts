@@ -109,7 +109,12 @@ async function main() {
       const existing = await db
         .select()
         .from(responsibilityGroupPermissions)
-        .where(eq(responsibilityGroupPermissions.permissionId, permission.id))
+        .where(
+          and(
+            eq(responsibilityGroupPermissions.responsibilityGroupId, group.id),
+            eq(responsibilityGroupPermissions.permissionId, permission.id),
+          ),
+        )
         .limit(1);
 
       if (existing.length === 0) {
@@ -196,26 +201,23 @@ async function main() {
     }
 
     if (staffId) {
-      for (const groupKey of [
-        RESPONSIBILITY_GROUPS.SELLER,
-        RESPONSIBILITY_GROUPS.CASHIER,
-        RESPONSIBILITY_GROUPS.STOREKEEPER,
-      ]) {
-        const [group] = await db
-          .select()
-          .from(responsibilityGroups)
-          .where(eq(responsibilityGroups.key, groupKey))
-          .limit(1);
+      const [dailyStaffGroup] = await db
+        .select()
+        .from(responsibilityGroups)
+        .where(eq(responsibilityGroups.key, RESPONSIBILITY_GROUPS.DAILY_STAFF))
+        .limit(1);
 
-        if (!group) continue;
-
+      if (dailyStaffGroup) {
         const existingGroup = await db
           .select()
           .from(userResponsibilityGroups)
           .where(
             and(
               eq(userResponsibilityGroups.userId, staffId),
-              eq(userResponsibilityGroups.responsibilityGroupId, group.id),
+              eq(
+                userResponsibilityGroups.responsibilityGroupId,
+                dailyStaffGroup.id,
+              ),
             ),
           )
           .limit(1);
@@ -223,7 +225,7 @@ async function main() {
         if (existingGroup.length === 0) {
           await db.insert(userResponsibilityGroups).values({
             userId: staffId,
-            responsibilityGroupId: group.id,
+            responsibilityGroupId: dailyStaffGroup.id,
           });
         }
       }

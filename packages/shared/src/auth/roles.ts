@@ -6,6 +6,7 @@ export const USER_ROLES = {
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 
 export const RESPONSIBILITY_GROUPS = {
+  DAILY_STAFF: "daily_staff",
   ADMIN_HELPER: "admin_helper",
   MANAGER: "manager",
   SELLER: "seller",
@@ -18,6 +19,7 @@ export type ResponsibilityGroup =
 
 export const RESPONSIBILITY_GROUP_LABELS: Record<ResponsibilityGroup, string> =
   {
+    daily_staff: "Daily Staff",
     admin_helper: "Admin Helper",
     manager: "Manager",
     seller: "Seller",
