@@ -425,9 +425,10 @@ export async function productsRoutes(app: FastifyInstance) {
           model: data.model?.trim(),
           description: data.description?.trim(),
 
-          buyingPriceRwf: data.buyingPriceRwf,
+          buyingPriceRwf: auth.role === "owner" ? data.buyingPriceRwf : 0,
           sellingPriceRwf: data.sellingPriceRwf,
-          minSellingPriceRwf: data.minSellingPriceRwf,
+          minSellingPriceRwf:
+            auth.role === "owner" ? data.minSellingPriceRwf : 0,
 
           currentStock: 0,
           lowStockAlert: data.lowStockAlert,
