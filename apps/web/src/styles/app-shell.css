@@ -183,6 +183,7 @@
 
 .nav-button {
   appearance: none;
+  font: inherit;
 }
 
 .nav-item:hover {

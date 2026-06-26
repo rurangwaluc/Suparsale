@@ -247,21 +247,7 @@ export function AppShell({ children, title }: AppShellProps) {
     }
   }
 
-  if (loading) {
-    return (
-      <main className="app-loading">
-        <div className="loading-card">
-          <div className="brand-icon">S</div>
-          <div>
-            <strong>Opening shop control...</strong>
-            <p>Checking your account access.</p>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (!user) return null;
+  if (loading || !user) return null;
 
   return (
     <div className="app">
@@ -337,15 +323,23 @@ export function AppShell({ children, title }: AppShellProps) {
 
             if (isRealLink) {
               return (
-                <a
+                <button
                   key={item.label}
-                  className={active ? "nav-item active" : "nav-item"}
-                  href={item.href}
+                  className={
+                    active ? "nav-item nav-button active" : "nav-item nav-button"
+                  }
+                  type="button"
                   data-label={item.label}
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={() => {
+                    setSidebarOpen(false);
+
+                    if (pathname !== item.href) {
+                      router.push(item.href);
+                    }
+                  }}
                 >
                   {content}
-                </a>
+                </button>
               );
             }
 
