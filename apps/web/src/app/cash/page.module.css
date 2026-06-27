@@ -653,3 +653,90 @@
 
 
 
+
+/* Cash drawer should focus on physical cash first. */
+.mainGrid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mainGrid > .panel:first-child {
+  display: none;
+}
+
+.metricCard,
+.proofPanel,
+.ledgerPanel,
+.quickAction,
+.quickActionStatic {
+  border-radius: 13px;
+}
+
+.metricValue,
+.miniMoney strong,
+.proofItem strong,
+.ledgerIdentity h3,
+.ledgerDescription strong,
+.expectedCashBox strong,
+.differencePreview strong {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+@media (max-width: 760px) {
+  .metricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 389px) {
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ledgerPanel:has(.emptyState) {
+  display: none;
+}
+
+.cashPage :global(.hero-kicker),
+.cashPage :global(.dashboard-kicker) {
+  color: var(--blue);
+  border-color: color-mix(in srgb, var(--blue) 42%, var(--border));
+  background: color-mix(in srgb, var(--blue) 14%, transparent);
+}
+
+.cashPage :global(.badge),
+.cashPage :global(.badge-green),
+.cashPage :global(.badge-blue) {
+  font-weight: 900;
+}
+
+.quickAction,
+.quickActionStatic,
+.metricCard,
+.proofPanel,
+.ledgerPanel {
+  color: var(--gray-900);
+}
+
+.quickAction small,
+.quickActionStatic small,
+.metricCard :global(.stat-help),
+.proofItem span {
+  color: var(--gray-500);
+}
+
+.quickAction span,
+.quickActionStatic span,
+.metricValue,
+.proofItem strong {
+  color: var(--gray-900);
+}
+
+.dateInput {
+  color-scheme: dark;
+}
+
+:global([data-theme="light"]) .dateInput {
+  color-scheme: light;
+}

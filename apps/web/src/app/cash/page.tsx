@@ -410,16 +410,11 @@ export default function CashPage() {
       <div className={styles.cashPage}>
         <section className={`dashboard-hero ${styles.hero}`}>
           <div className={styles.heroCopy}>
-            <span className="hero-kicker dashboard-kicker">
-              <WalletCards size={15} />
-              Money control
-            </span>
-
-            <h1>Cash handling</h1>
+            <h1>Cash drawer</h1>
 
             <p>
-              Track money in, money out, payment methods, expected cash, counted
-              cash, and daily cash difference.
+              Open cash, close the day, and check if physical cash matches what
+              the system expects.
             </p>
           </div>
 
@@ -517,19 +512,19 @@ export default function CashPage() {
 
           <MetricCard
             icon={<ArrowUpRight size={20} />}
-            label="Total money in"
-            value={formatRwf(totals.moneyInRwf)}
-            help={`${moneyInRows.length} money-in record(s)`}
-            badge="Money in"
+            label="Cash received"
+            value={formatRwf(totals.cashInRwf)}
+            help="Physical cash added from sales or cash-in actions"
+            badge="Cash in"
             badgeClass="badge badge-green"
           />
 
           <MetricCard
             icon={<ArrowDownLeft size={20} />}
-            label="Total money out"
-            value={formatRwf(totals.moneyOutRwf)}
-            help={`${moneyOutRows.length} money-out record(s)`}
-            badge="Money out"
+            label="Cash removed"
+            value={formatRwf(totals.cashOutRwf)}
+            help="Physical cash removed from the drawer"
+            badge="Cash out"
             badgeClass="badge badge-blue"
           />
 
@@ -596,9 +591,9 @@ export default function CashPage() {
           <section className={`table-card premium-panel ${styles.panel}`}>
             <div className="table-card-header">
               <div>
-                <div className="table-title">Daily actions</div>
+                <div className="table-title">What to do now</div>
                 <div className="app-subtitle">
-                  Use this for owner money in/out and daily closing.
+                  Only the next cash drawer actions are shown here.
                 </div>
               </div>
             </div>
@@ -625,7 +620,7 @@ export default function CashPage() {
                   >
                     <ArrowUpRight size={18} />
                     <span>Money in</span>
-                    <small>Owner adds cash</small>
+                    <small>Add physical cash</small>
                   </button>
 
                   <button
@@ -635,7 +630,7 @@ export default function CashPage() {
                   >
                     <ArrowDownLeft size={18} />
                     <span>Money out</span>
-                    <small>Owner removes cash</small>
+                    <small>Remove physical cash</small>
                   </button>
 
                   <button
@@ -686,7 +681,7 @@ export default function CashPage() {
                 </div>
               ) : null}
 
-              {!session ? (
+              {!session && !canOpenCash ? (
                 <div className={styles.quickActionStatic}>
                   <ShieldCheck size={18} />
                   <span>Waiting to open</span>

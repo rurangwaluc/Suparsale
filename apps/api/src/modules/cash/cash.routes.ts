@@ -551,17 +551,20 @@ export async function cashRoutes(app: FastifyInstance) {
       const data = parsed.data;
       const businessDate = data.businessDate || makeBusinessDate();
 
-      const cashControl = await requireOpenCashSession(reply, businessDate);
+      const requiresCashDrawer = data.method === "cash";
+      const cashControl = requiresCashDrawer
+        ? await requireOpenCashSession(reply, businessDate)
+        : null;
 
-      if (!cashControl) {
+      if (requiresCashDrawer && !cashControl) {
         return;
       }
 
       const [movement] = await db
         .insert(moneyLedger)
         .values({
-          businessDate: cashControl.businessDate,
-          cashSessionId: cashControl.session.id,
+          businessDate: cashControl?.businessDate || businessDate,
+          cashSessionId: cashControl?.session.id || null,
           direction: data.direction,
           amountRwf: data.amountRwf,
           method: data.method,
