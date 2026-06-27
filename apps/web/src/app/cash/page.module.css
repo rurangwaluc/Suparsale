@@ -740,3 +740,7 @@
 :global([data-theme="light"]) .dateInput {
   color-scheme: light;
 }
+
+.mainGrid {
+  display: none;
+}
