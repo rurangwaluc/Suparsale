@@ -1223,3 +1223,35 @@
     linear-gradient(45deg, transparent 50%, var(--gray-400) 50%),
     linear-gradient(135deg, var(--gray-400) 50%, transparent 50%);
 }
+
+@media (max-width: 1320px) {
+  .cartControls {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1040px) {
+  .cartControls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .cartControls {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cartItem {
+  overflow: hidden;
+}
+
+.miniMoney,
+.miniTotal {
+  max-width: 100%;
+}
+
+.miniMoney strong,
+.miniTotal strong {
+  white-space: normal;
+}
