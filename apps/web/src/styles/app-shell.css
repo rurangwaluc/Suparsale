@@ -698,3 +698,48 @@
     border-radius: 13px;
   }
 }
+
+
+/* Keep the sidebar clean: only the nav list scrolls, footer stays pinned. */
+.sidebar {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo,
+.sb-search,
+.sidebar-footer {
+  flex: 0 0 auto;
+}
+
+.sidebar-nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 14px;
+}
+
+.sidebar-footer {
+  margin-top: 0;
+  background: var(--sb-bg);
+  border-top: 1px solid var(--sb-border);
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.34);
+}
