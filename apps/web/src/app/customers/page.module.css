@@ -429,3 +429,92 @@
 
 
 
+
+/* Owner-first customers polish */
+.hero {
+  border-radius: 16px;
+}
+
+.hero :global(.hero-kicker),
+.hero :global(.dashboard-kicker) {
+  display: none;
+}
+
+.hero h1 {
+  letter-spacing: -1.3px;
+}
+
+.metricsGrid {
+  gap: 12px;
+}
+
+.metricCard {
+  border-radius: 14px;
+  padding: 15px;
+  box-shadow: var(--sh-sm);
+}
+
+.metricValue {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.listPanel {
+  border-radius: 14px;
+  box-shadow: var(--sh-sm);
+}
+
+.customerGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.customerCard {
+  border-radius: 14px;
+  background: var(--card);
+  padding: 13px;
+}
+
+.customerCardTop {
+  align-items: center;
+}
+
+.customerIdentity h3 {
+  font-size: 15px;
+}
+
+.customerInfoGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.miniInfo {
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.customerNotes {
+  padding-top: 10px;
+}
+
+@media (min-width: 1440px) {
+  .customerGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1180px) {
+  .customerInfoGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    border-radius: 14px;
+  }
+
+  .customerGrid,
+  .customerInfoGrid {
+    grid-template-columns: 1fr;
+  }
+}

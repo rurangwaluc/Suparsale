@@ -48,6 +48,10 @@ function hasPermission(user: AuthUser | null, permission: string) {
   return user.permissions.includes(permission);
 }
 
+function formatRwf(value: number) {
+  return `Rwf ${Math.abs(Number(value || 0)).toLocaleString("en-US")}`;
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString("en-US", {
     year: "numeric",
@@ -97,6 +101,29 @@ export default function CustomersPage() {
 
   const customersWithPhone = useMemo(
     () => customers.filter((customer) => customer.phone),
+    [customers],
+  );
+
+  const customersWithBalance = useMemo(
+    () => customers.filter((customer) => Number(customer.openBalanceRwf || 0) > 0),
+    [customers],
+  );
+
+  const totalCustomerBalance = useMemo(
+    () =>
+      customers.reduce(
+        (sum, customer) => sum + Number(customer.openBalanceRwf || 0),
+        0,
+      ),
+    [customers],
+  );
+
+  const totalCustomerSales = useMemo(
+    () =>
+      customers.reduce(
+        (sum, customer) => sum + Number(customer.totalBoughtRwf || 0),
+        0,
+      ),
     [customers],
   );
 
@@ -346,12 +373,11 @@ export default function CustomersPage() {
               Customer profiles
             </span>
 
-            <h1>Customers</h1>
+            <h1>Customer history</h1>
 
             <p>
-              Manage customers for existing-customer sales, pay-later records,
-              deposits, and follow-up when someone takes a product and promises
-              to pay later.
+              See who buys from the business, who has a balance, and who needs
+              follow-up before creating another credit sale.
             </p>
           </div>
 
@@ -383,35 +409,35 @@ export default function CustomersPage() {
             icon={<Users size={20} />}
             label="Customers"
             value={String(customers.length)}
-            help="All customer profiles in the system"
+            help={`${activeCustomers.length} active customer(s)`}
             badge="Total"
             badgeClass="badge badge-blue"
           />
 
           <MetricCard
+            icon={<WalletCards size={20} />}
+            label="Customers owing"
+            value={String(customersWithBalance.length)}
+            help={`${formatRwf(totalCustomerBalance)} still to collect`}
+            badge="Balance"
+            badgeClass="badge badge-blue"
+          />
+
+          <MetricCard
             icon={<CheckCircle2 size={20} />}
-            label="Active customers"
-            value={String(activeCustomers.length)}
-            help="Customers available for new sales"
-            badge="Active"
+            label="Total bought"
+            value={formatRwf(totalCustomerSales)}
+            help="Sales linked to saved customers"
+            badge="Sales"
             badgeClass="badge badge-green"
           />
 
           <MetricCard
             icon={<User size={20} />}
-            label="With phone number"
+            label="With phone"
             value={String(customersWithPhone.length)}
-            help="Useful for payment follow-up"
-            badge="Phone"
-            badgeClass="badge badge-blue"
-          />
-
-          <MetricCard
-            icon={<PowerOff size={20} />}
-            label="Inactive customers"
-            value={String(inactiveCustomers.length)}
-            help="Customers hidden from normal work"
-            badge="Inactive"
+            help={`${inactiveCustomers.length} inactive customer(s)`}
+            badge="Follow up"
             badgeClass="badge badge-blue"
           />
         </div>
@@ -423,7 +449,7 @@ export default function CustomersPage() {
             <div>
               <div className="table-title">Customer list</div>
               <div className="app-subtitle">
-                Search, create, edit, activate, and deactivate customers.
+                Search customers, check balances, and update follow-up details.
               </div>
             </div>
 
@@ -524,14 +550,32 @@ export default function CustomersPage() {
                   />
 
                   <MiniInfo
-                    label="Address"
-                    value={customer.address || "No address"}
+                    label="Balance"
+                    value={formatRwf(customer.openBalanceRwf || 0)}
+                    tone={
+                      Number(customer.openBalanceRwf || 0) > 0
+                        ? "warning"
+                        : "success"
+                    }
+                  />
+
+                  <MiniInfo
+                    label="Sales"
+                    value={`${customer.salesCount || 0} sale(s)`}
+                  />
+
+                  <MiniInfo
+                    label="Bought"
+                    value={formatRwf(customer.totalBoughtRwf || 0)}
                   />
                 </div>
 
                 <div className={styles.customerNotes}>
-                  <span>Notes</span>
-                  <strong>{customer.notes || "No notes"}</strong>
+                  <span>Address / Notes</span>
+                  <strong>
+                    {customer.address || "No address"}
+                    {customer.notes ? ` · ${customer.notes}` : ""}
+                  </strong>
                 </div>
               </article>
             ))}

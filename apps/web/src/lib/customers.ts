@@ -10,6 +10,11 @@ export type Customer = {
   createdById: string | null;
   createdAt: string;
   updatedAt: string;
+  salesCount?: number;
+  debtCount?: number;
+  openBalanceRwf?: number;
+  totalBoughtRwf?: number;
+  lastSaleAt?: string | null;
 };
 
 export type CreateCustomerInput = {

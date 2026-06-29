@@ -1,4 +1,4 @@
-import { customers, db } from "@techtrack/db";
+import { customerDebts, customers, db, sales } from "@techtrack/db";
 import { desc, eq, ilike, or } from "drizzle-orm";
 import { requireAuth, requirePermission } from "../auth/auth.middleware.js";
 
@@ -56,9 +56,48 @@ export async function customersRoutes(app: FastifyInstance) {
             .orderBy(desc(customers.createdAt))
         : await db.select().from(customers).orderBy(desc(customers.createdAt));
 
+      const [allDebts, allSales] = await Promise.all([
+        db.select().from(customerDebts),
+        db.select().from(sales),
+      ]);
+
+      const customersWithSummary = rows.map((customer) => {
+        const customerDebtsList = allDebts.filter(
+          (debt) => debt.customerId === customer.id,
+        );
+        const customerSalesList = allSales.filter(
+          (sale) => sale.customerId === customer.id,
+        );
+
+        const openBalanceRwf = customerDebtsList.reduce(
+          (sum, debt) => sum + Number(debt.balanceRwf || 0),
+          0,
+        );
+
+        const totalBoughtRwf = customerSalesList.reduce(
+          (sum, sale) => sum + Number(sale.totalAmountRwf || 0),
+          0,
+        );
+
+        const lastSaleAt =
+          customerSalesList
+            .map((sale) => sale.createdAt)
+            .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+
+        return {
+          ...customer,
+          salesCount: customerSalesList.length,
+          debtCount: customerDebtsList.filter((debt) => debt.balanceRwf > 0)
+            .length,
+          openBalanceRwf,
+          totalBoughtRwf,
+          lastSaleAt,
+        };
+      });
+
       return {
         ok: true,
-        customers: rows,
+        customers: customersWithSummary,
       };
     },
   );
