@@ -110,7 +110,7 @@ export default function CashPage() {
   const [message, setMessage] = useState("");
 
   const [ledgerSearch, setLedgerSearch] = useState("");
-  const [visibleLedgerCount, setVisibleLedgerCount] = useState(10);
+  const [visibleLedgerCount, setVisibleLedgerCount] = useState(8);
 
   const [modalMode, setModalMode] = useState<ModalMode>(null);
 
@@ -147,6 +147,15 @@ export default function CashPage() {
   const netMoneyMovement = useMemo(
     () => Number(totals.moneyInRwf || 0) - Number(totals.moneyOutRwf || 0),
     [totals.moneyInRwf, totals.moneyOutRwf],
+  );
+
+  const nonCashReceivedRwf = useMemo(
+    () =>
+      Number(totals.momoInRwf || 0) +
+      Number(totals.bankInRwf || 0) +
+      Number(totals.cardInRwf || 0) +
+      Number(totals.otherInRwf || 0),
+    [totals.bankInRwf, totals.cardInRwf, totals.momoInRwf, totals.otherInRwf],
   );
 
   const filteredLedger = useMemo(() => {
@@ -205,7 +214,7 @@ export default function CashPage() {
       setTotals(cashResponse.totals);
       setLedger(cashResponse.ledger);
       setCountedCashRwf(String(cashResponse.totals.expectedCashRwf || 0));
-      setVisibleLedgerCount(10);
+      setVisibleLedgerCount(8);
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Could not load cash.",
@@ -410,11 +419,11 @@ export default function CashPage() {
       <div className={styles.cashPage}>
         <section className={`dashboard-hero ${styles.hero}`}>
           <div className={styles.heroCopy}>
-            <h1>Cash drawer</h1>
+            <h1>Money control</h1>
 
             <p>
-              Open cash, close the day, and check if physical cash matches what
-              the system expects.
+              Check expected cash, cash received, cash removed, and every money
+              movement from sales, debts, installments, and manual actions.
             </p>
           </div>
 
@@ -492,29 +501,19 @@ export default function CashPage() {
 
         <div className={styles.metricsGrid}>
           <MetricCard
-            icon={<Banknote size={20} />}
-            label="Cash session"
-            value={session ? session.businessDate : businessDate}
-            help={
-              session
-                ? `Opened ${formatDateTime(session.openedAt)}`
-                : "Open cash before daily selling"
-            }
+            icon={<Coins size={20} />}
+            label="Expected cash"
+            value={formatRwf(totals.expectedCashRwf)}
+            help="Opening float + cash received - cash removed"
             badge={session ? session.status : "Not opened"}
-            badgeClass={
-              isOpen
-                ? "badge badge-green"
-                : isClosed
-                  ? "badge badge-blue"
-                  : "badge badge-blue"
-            }
+            badgeClass={isOpen ? "badge badge-green" : "badge badge-blue"}
           />
 
           <MetricCard
             icon={<ArrowUpRight size={20} />}
             label="Cash received"
             value={formatRwf(totals.cashInRwf)}
-            help="Physical cash added from sales or cash-in actions"
+            help="Physical cash from sales, debts, and cash-in actions"
             badge="Cash in"
             badgeClass="badge badge-green"
           />
@@ -529,11 +528,11 @@ export default function CashPage() {
           />
 
           <MetricCard
-            icon={<Coins size={20} />}
-            label="Expected cash"
-            value={formatRwf(totals.expectedCashRwf)}
-            help="Opening float + cash in - cash out"
-            badge="Expected"
+            icon={<Banknote size={20} />}
+            label="Non-cash received"
+            value={formatRwf(nonCashReceivedRwf)}
+            help="MoMo, bank, card, and other received money"
+            badge="Non-cash"
             badgeClass="badge badge-blue"
           />
         </div>
@@ -617,10 +616,10 @@ export default function CashPage() {
         <section className={`table-card premium-panel ${styles.ledgerPanel}`}>
           <div className="table-card-header">
             <div>
-              <div className="table-title">Money ledger</div>
+              <div className="table-title">Money movement history</div>
               <div className="app-subtitle">
-                Every sale payment, deposit, debt payment, installment, expense,
-                and manual money movement should appear here.
+                Search latest money in and money out by method, category, source,
+                actor, or amount.
               </div>
             </div>
 
@@ -636,9 +635,9 @@ export default function CashPage() {
                 value={ledgerSearch}
                 onChange={(event) => {
                   setLedgerSearch(event.target.value);
-                  setVisibleLedgerCount(10);
+                  setVisibleLedgerCount(8);
                 }}
-                placeholder="Search method, category, source, actor..."
+                placeholder="Search method, category, source, actor, or amount..."
               />
             </div>
 
@@ -647,7 +646,7 @@ export default function CashPage() {
               type="button"
               onClick={() => {
                 setLedgerSearch("");
-                setVisibleLedgerCount(10);
+                setVisibleLedgerCount(8);
               }}
             >
               Clear
@@ -676,9 +675,9 @@ export default function CashPage() {
               <button
                 className="btn btn-outline"
                 type="button"
-                onClick={() => setVisibleLedgerCount((current) => current + 10)}
+                onClick={() => setVisibleLedgerCount((current) => current + 8)}
               >
-                Load more ledger records
+                Load more money movements
               </button>
             </div>
           ) : null}

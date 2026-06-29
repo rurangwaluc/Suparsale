@@ -744,3 +744,95 @@
 .mainGrid {
   display: none;
 }
+
+/* Owner-first money control polish */
+.hero {
+  border-radius: 16px;
+}
+
+.hero h1 {
+  letter-spacing: -1.3px;
+}
+
+.metricsGrid {
+  gap: 12px;
+}
+
+.metricCard,
+.proofPanel,
+.ledgerPanel {
+  border-radius: 14px;
+  box-shadow: var(--sh-sm);
+}
+
+.metricCard {
+  padding: 15px;
+}
+
+.metricValue {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.proofGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.proofItem {
+  border-radius: 12px;
+}
+
+.ledgerPanel:has(.emptyState) {
+  display: block;
+}
+
+.ledgerList {
+  grid-template-columns: 1fr;
+}
+
+.ledgerCard {
+  border-radius: 14px;
+  background: var(--card);
+  padding: 13px;
+}
+
+.ledgerTop {
+  align-items: center;
+}
+
+.ledgerInfoGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ledgerDescription {
+  padding-top: 10px;
+}
+
+@media (min-width: 1440px) {
+  .ledgerList {
+    grid-template-columns: 1fr;
+  }
+
+  .proofGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1180px) {
+  .ledgerInfoGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    border-radius: 14px;
+  }
+
+  .proofGrid,
+  .ledgerInfoGrid {
+    grid-template-columns: 1fr;
+  }
+}
