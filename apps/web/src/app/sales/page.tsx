@@ -274,7 +274,7 @@ export default function SalesPage() {
         getCustomers(token),
         getCashToday(token),
         getSalesSummary(token),
-        getSales(token, { limit: 8 }),
+        getSales(token, { limit: 20 }),
       ]);
 
       setProducts(productsResponse.products);
@@ -718,6 +718,81 @@ export default function SalesPage() {
                 ) : null}
               </div>
             </section>
+          </div>
+        </section>
+
+        <section className={styles.salesHistory}>
+          <div className={styles.historyTop}>
+            <div>
+              <span className={styles.overviewKicker}>
+                <ReceiptText size={14} />
+                Sales history
+              </span>
+              <h2>Sales list</h2>
+              <p>Open any sale to check products, payment, balance, and customer details.</p>
+            </div>
+
+            <span className="badge badge-blue">
+              {recentSales.length} latest
+            </span>
+          </div>
+
+          <div className={styles.salesTableWrap}>
+            <div className={styles.salesTable}>
+              <div className={styles.salesTableHead}>
+                <span>Sale</span>
+                <span>Customer</span>
+                <span>Total</span>
+                <span>Paid</span>
+                <span>Balance</span>
+                <span>Status</span>
+                <span>Date</span>
+                <span></span>
+              </div>
+
+              {recentSales.map((sale) => {
+                const customerName =
+                  sale.customerName || sale.walkInName || "Walk-in customer";
+                const hasBalance = Number(sale.balanceRwf || 0) > 0;
+
+                return (
+                  <button
+                    key={sale.id}
+                    type="button"
+                    className={styles.salesTableRow}
+                    onClick={() => router.push(`/sales/${sale.id}`)}
+                  >
+                    <span>
+                      <strong>{sale.saleNumber}</strong>
+                    </span>
+                    <span>{customerName}</span>
+                    <span>{formatRwf(sale.totalAmountRwf)}</span>
+                    <span>{formatRwf(sale.amountPaidRwf)}</span>
+                    <span className={hasBalance ? styles.statusBad : styles.statusGood}>
+                      {formatRwf(sale.balanceRwf)}
+                    </span>
+                    <span>
+                      <em className={hasBalance ? styles.statusPillBad : styles.statusPillGood}>
+                        {hasBalance ? "Balance" : cleanLabel(sale.paymentStatus)}
+                      </em>
+                    </span>
+                    <span>{formatShortDate(sale.createdAt)}</span>
+                    <span className={styles.viewSaleAction}>
+                      <Eye size={15} />
+                      View
+                    </span>
+                  </button>
+                );
+              })}
+
+              {recentSales.length === 0 ? (
+                <div className={styles.historyEmpty}>
+                  <ShoppingCart size={20} />
+                  <strong>No sales yet</strong>
+                  <span>Created sales will appear here.</span>
+                </div>
+              ) : null}
+            </div>
           </div>
         </section>
 

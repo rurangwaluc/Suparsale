@@ -1255,3 +1255,185 @@
 .miniTotal strong {
   white-space: normal;
 }
+
+.salesHistory {
+  margin-bottom: 16px;
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.055);
+}
+
+.historyTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.historyTop h2 {
+  margin: 0;
+  color: var(--gray-900);
+  font-size: 20px;
+  line-height: 1.12;
+  letter-spacing: -0.55px;
+  font-weight: 950;
+}
+
+.historyTop p {
+  max-width: 720px;
+  margin-top: 6px;
+  color: var(--gray-500);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.salesTableWrap {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.salesTable {
+  min-width: 980px;
+  display: grid;
+  gap: 8px;
+}
+
+.salesTableHead,
+.salesTableRow {
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 1.1fr)
+    minmax(150px, 1fr)
+    minmax(110px, 0.8fr)
+    minmax(110px, 0.8fr)
+    minmax(110px, 0.8fr)
+    minmax(110px, 0.8fr)
+    minmax(110px, 0.8fr)
+    minmax(86px, 0.6fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.salesTableHead {
+  padding: 0 12px;
+  color: var(--gray-500);
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.salesTableRow {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--gray-50);
+  color: var(--gray-700);
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.salesTableRow:hover {
+  border-color: color-mix(in srgb, var(--blue) 32%, var(--border));
+  background: color-mix(in srgb, var(--blue-lt) 24%, var(--card));
+}
+
+.salesTableRow span {
+  min-width: 0;
+  color: var(--gray-600);
+  font-size: 12px;
+  font-weight: 850;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.salesTableRow strong {
+  color: var(--gray-900);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.statusPillGood,
+.statusPillBad {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 0 9px;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.statusPillGood {
+  color: var(--green);
+  background: var(--green-lt);
+  border: 1px solid rgba(22, 163, 74, 0.22);
+}
+
+.statusPillBad {
+  color: var(--blue);
+  background: var(--blue-lt);
+  border: 1px solid color-mix(in srgb, var(--blue) 28%, var(--border));
+}
+
+.viewSaleAction {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  color: var(--blue) !important;
+  font-weight: 950 !important;
+}
+
+.historyEmpty {
+  min-height: 96px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 7px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: var(--gray-50);
+  color: var(--gray-500);
+  padding: 18px;
+}
+
+.historyEmpty svg {
+  color: var(--blue);
+}
+
+.historyEmpty strong {
+  color: var(--gray-900);
+  font-weight: 950;
+}
+
+.historyEmpty span {
+  color: var(--gray-500);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .salesHistory {
+    border-radius: 13px;
+    padding: 14px;
+  }
+
+  .historyTop {
+    flex-direction: column;
+  }
+
+  .salesTable {
+    min-width: 860px;
+  }
+}
