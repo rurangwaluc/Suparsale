@@ -69,7 +69,7 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
-  const [visibleCustomersCount, setVisibleCustomersCount] = useState(12);
+  const [visibleCustomersCount, setVisibleCustomersCount] = useState(8);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -177,7 +177,7 @@ export default function CustomersPage() {
 
       setUser(meResponse.user);
       setCustomers(customersResponse.customers);
-      setVisibleCustomersCount(12);
+      setVisibleCustomersCount(8);
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Could not load customers.",
@@ -598,7 +598,7 @@ export default function CustomersPage() {
                 className="btn btn-outline"
                 type="button"
                 onClick={() =>
-                  setVisibleCustomersCount((current) => current + 12)
+                  setVisibleCustomersCount((current) => current + 8)
                 }
               >
                 Load more customers
