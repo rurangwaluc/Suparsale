@@ -123,6 +123,30 @@ export default function DebtsPage() {
     );
   }, [debts]);
 
+  const dueSoonDebts = useMemo(() => {
+    const now = Date.now();
+    const nextSevenDays = now + 7 * 24 * 60 * 60 * 1000;
+
+    return pendingDebts.filter((debt) => {
+      if (!debt.expectedPaymentAt) return false;
+
+      const dueTime = new Date(debt.expectedPaymentAt).getTime();
+
+      return dueTime >= now && dueTime <= nextSevenDays;
+    });
+  }, [pendingDebts]);
+
+  const urgentDebts = useMemo(() => {
+    return pendingDebts.filter(
+      (debt) =>
+        isOverdue(debt.expectedPaymentAt) ||
+        (debt.installments || []).some(
+          (installment) =>
+            installment.balanceRwf > 0 && isOverdue(installment.dueAt),
+        ),
+    );
+  }, [pendingDebts]);
+
   const filteredDebts = useMemo(() => {
     const term = search.trim().toLowerCase();
 
@@ -308,11 +332,11 @@ export default function DebtsPage() {
               Customer debts
             </span>
 
-            <h1>Pay-later and installments</h1>
+            <h1>Money to collect</h1>
 
             <p>
-              Track customers who took products and promised to pay later.
-              Record full, partial, or installment payments here.
+              See who owes the business, what is overdue, what is due soon,
+              and record payments without opening complicated reports.
             </p>
           </div>
 
@@ -351,38 +375,38 @@ export default function DebtsPage() {
         <div className={styles.metricsGrid}>
           <MetricCard
             icon={<WalletCards size={20} />}
-            label="Open balance"
+            label="Money to collect"
             value={formatRwf(totalDebtBalance)}
-            help="Money customers still owe"
-            badge="Balance"
+            help={`${pendingDebts.length} customer balance(s) still open`}
+            badge="Collect"
             badgeClass="badge badge-blue"
           />
 
           <MetricCard
-            icon={<Clock size={20} />}
-            label="Pending debts"
-            value={String(pendingDebts.length)}
-            help="Customers who still need to pay"
-            badge="Pending"
+            icon={<AlertTriangle size={20} />}
+            label="Overdue"
+            value={String(urgentDebts.length)}
+            help={`${overdueInstallments.length} overdue installment(s) included`}
+            badge="Urgent"
             badgeClass="badge badge-blue"
           />
 
           <MetricCard
             icon={<CalendarClock size={20} />}
-            label="Installment plans"
-            value={String(installmentDebts.length)}
-            help={`${overdueInstallments.length} overdue installment(s)`}
-            badge="Plans"
+            label="Due soon"
+            value={String(dueSoonDebts.length)}
+            help="Expected within the next 7 days"
+            badge="Soon"
             badgeClass="badge badge-blue"
           />
 
           <MetricCard
-            icon={<CreditCard size={20} />}
-            label="Original debt amount"
-            value={formatRwf(totalDebtOriginal)}
-            help={`${paidDebts.length} debt record(s) fully cleared`}
-            badge="Total"
-            badgeClass="badge badge-blue"
+            icon={<CheckCircle2 size={20} />}
+            label="Cleared"
+            value={String(paidDebts.length)}
+            help={`${formatRwf(totalDebtOriginal - totalDebtBalance)} already collected`}
+            badge="Done"
+            badgeClass="badge badge-green"
           />
         </div>
 
@@ -391,10 +415,9 @@ export default function DebtsPage() {
         <section className={`table-card premium-panel ${styles.controlPanel}`}>
           <div className="table-card-header">
             <div>
-              <div className="table-title">Debt control</div>
+              <div className="table-title">Find a customer balance</div>
               <div className="app-subtitle">
-                Search customer debts and installment plans without horizontal
-                scrolling.
+                Search by customer, phone, sale number, or payment status.
               </div>
             </div>
 
@@ -438,9 +461,9 @@ export default function DebtsPage() {
         <section className={`table-card premium-panel ${styles.listPanel}`}>
           <div className="table-card-header">
             <div>
-              <div className="table-title">Customer debt list</div>
+              <div className="table-title">Customers to collect from</div>
               <div className="app-subtitle">
-                Record full debt payments or pay specific installments.
+                Open balances first. Record payment when the customer pays.
               </div>
             </div>
 
@@ -490,7 +513,7 @@ export default function DebtsPage() {
                     />
 
                     <MiniInfo
-                      label="Original"
+                      label="Sale debt"
                       value={formatRwf(debt.originalAmountRwf)}
                     />
 
@@ -501,7 +524,7 @@ export default function DebtsPage() {
                     />
 
                     <MiniInfo
-                      label="Plan"
+                      label="Payment type"
                       value={
                         installments.length > 0
                           ? `${installments.length} installment(s)`
@@ -577,9 +600,9 @@ export default function DebtsPage() {
         <section className={`table-card premium-panel ${styles.planPanel}`}>
           <div className="table-card-header">
             <div>
-              <div className="table-title">Installment schedules</div>
+              <div className="table-title">Installment plans</div>
               <div className="app-subtitle">
-                Quick view of all installment plans and their payment status.
+                Detailed schedule for customers paying in parts.
               </div>
             </div>
 
