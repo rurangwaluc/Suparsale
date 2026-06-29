@@ -470,12 +470,11 @@ export default function StaffPage() {
               Owner controlled access
             </span>
 
-            <h1>Staff accounts</h1>
+            <h1>Staff control</h1>
 
             <p>
-              This shop has one owner and two employees. The owner creates each
-              account, edits employees, resets passwords, and controls
-              responsibilities.
+              See who can access the business, what each employee can do,
+              and quickly update access, password, or account status.
             </p>
           </div>
 
@@ -522,7 +521,7 @@ export default function StaffPage() {
 
           <MetricCard
             icon={<SlidersHorizontal size={20} />}
-            label="Responsibilities"
+            label="Access groups"
             value={`${assignedResponsibilityCount}/${groups.length || 5}`}
             help="Manager, seller, cashier, storekeeper"
             badge="Control"
@@ -531,7 +530,7 @@ export default function StaffPage() {
 
           <MetricCard
             icon={<KeyRound size={20} />}
-            label="Password reset"
+            label="Password control"
             value="Owner only"
             help="Owner can reset employee passwords"
             badge="Ready"
@@ -544,9 +543,9 @@ export default function StaffPage() {
         <section className={`table-card premium-panel ${styles.listPanel}`}>
           <div className="table-card-header">
             <div>
-              <div className="table-title">Current users</div>
+              <div className="table-title">Team access</div>
               <div className="app-subtitle">
-                Owner and employees who can access this shop system.
+                Owner account and employees allowed to use the business system.
               </div>
             </div>
 

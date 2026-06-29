@@ -542,3 +542,88 @@
 
 
 
+
+/* Owner-first staff control polish */
+.hero {
+  border-radius: 16px;
+}
+
+.hero :global(.hero-kicker),
+.hero :global(.dashboard-kicker) {
+  display: none;
+}
+
+.hero h1 {
+  letter-spacing: -1.3px;
+}
+
+.metricsGrid {
+  gap: 12px;
+}
+
+.metricCard,
+.listPanel {
+  border-radius: 14px;
+  box-shadow: var(--sh-sm);
+}
+
+.metricCard {
+  padding: 15px;
+}
+
+.metricValue,
+.staffIdentity h3,
+.staffIdentity p,
+.staffIdentity span,
+.ownerControlBox strong,
+.ownerControlBox span,
+.responsibilityBlock > strong {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.staffGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.staffCard {
+  border-radius: 14px;
+  background: var(--card);
+  padding: 13px;
+}
+
+.staffCardTop {
+  align-items: center;
+}
+
+.staffIdentity h3 {
+  font-size: 15px;
+}
+
+.responsibilityBlock {
+  padding-top: 10px;
+}
+
+.ownerControlBox {
+  border-radius: 12px;
+}
+
+.responsibilityCard {
+  border-radius: 14px;
+}
+
+@media (min-width: 1440px) {
+  .staffGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    border-radius: 14px;
+  }
+
+  .staffGrid {
+    grid-template-columns: 1fr;
+  }
+}
