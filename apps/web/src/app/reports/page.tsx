@@ -20,8 +20,9 @@ import {
 import { AuthUser, getCurrentUser, getToken } from "@/lib/auth";
 import {
   DailySummaryReport,
-  downloadDailySummaryPdf,
-  getDailySummaryReport,
+  ReportPeriod,
+  downloadBusinessSummaryPdf,
+  getBusinessSummaryReport,
 } from "@/lib/reports";
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -52,13 +53,46 @@ function formatDate(value: string | null) {
   });
 }
 
-function getTodayDate() {
-  const date = new Date();
+function formatInputDate(date: Date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
 
   return `${y}-${m}-${d}`;
+}
+
+function getTodayDate() {
+  return formatInputDate(new Date());
+}
+
+function addDaysToInputDate(value: string, days: number) {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() + days);
+
+  return formatInputDate(date);
+}
+
+function getMonthEndInputDate(value: string) {
+  const [year, month] = value.split("-").map(Number);
+  const date = new Date(year, month, 0);
+
+  return formatInputDate(date);
+}
+
+function getDefaultToDate(period: ReportPeriod, fromDate: string) {
+  if (period === "daily") return fromDate;
+  if (period === "weekly") return addDaysToInputDate(fromDate, 6);
+  if (period === "monthly") return getMonthEndInputDate(fromDate);
+
+  return fromDate;
+}
+
+function readablePeriod(period: ReportPeriod) {
+  if (period === "daily") return "Daily";
+  if (period === "weekly") return "Weekly";
+  if (period === "monthly") return "Monthly";
+  return "Custom";
 }
 
 function hasPermission(user: AuthUser | null, permission: string) {
@@ -117,7 +151,9 @@ function saveBlob(blob: Blob, filename: string) {
 
 export default function ReportsPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [period, setPeriod] = useState<ReportPeriod>("daily");
   const [date, setDate] = useState(getTodayDate());
+  const [toDate, setToDate] = useState(getTodayDate());
   const [fromTime, setFromTime] = useState("");
   const [toTime, setToTime] = useState("");
   const [report, setReport] = useState<DailySummaryReport | null>(null);
@@ -181,7 +217,11 @@ export default function ReportsPage() {
     loadReport(date);
   }, []);
 
-  async function loadReport(nextDate = date) {
+  async function loadReport(
+    nextDate = date,
+    nextPeriod = period,
+    nextToDate = toDate,
+  ) {
     const token = getToken();
 
     if (!token) {
@@ -197,15 +237,22 @@ export default function ReportsPage() {
       const meResponse = await getCurrentUser(token);
       setUser(meResponse.user);
 
-      const reportResponse = await getDailySummaryReport(
-        token,
-        nextDate,
-        fromTime || undefined,
-        toTime || undefined,
-      );
+      const resolvedToDate =
+        nextPeriod === "custom"
+          ? nextToDate || nextDate
+          : getDefaultToDate(nextPeriod, nextDate);
+
+      const reportResponse = await getBusinessSummaryReport(token, {
+        period: nextPeriod,
+        fromDate: nextDate,
+        toDate: resolvedToDate,
+        fromTime: nextPeriod === "daily" ? fromTime || undefined : undefined,
+        toTime: nextPeriod === "daily" ? toTime || undefined : undefined,
+      });
 
       setReport(reportResponse.report);
-      setDate(reportResponse.report.businessDate);
+      setDate(nextDate);
+      setToDate(resolvedToDate);
       setFromTime(reportResponse.report.fromTime || fromTime);
       setToTime(reportResponse.report.toTime || toTime);
     } catch (error) {
@@ -220,7 +267,7 @@ export default function ReportsPage() {
 
   async function handleFilter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await loadReport(date);
+    await loadReport(date, period, toDate);
   }
 
   async function handleDownloadPdf() {
@@ -242,12 +289,16 @@ export default function ReportsPage() {
     setMessage("");
 
     try {
-      const file = await downloadDailySummaryPdf(
-        token,
-        date,
-        fromTime || undefined,
-        toTime || undefined,
-      );
+      const resolvedToDate =
+        period === "custom" ? toDate || date : getDefaultToDate(period, date);
+
+      const file = await downloadBusinessSummaryPdf(token, {
+        period,
+        fromDate: date,
+        toDate: resolvedToDate,
+        fromTime: period === "daily" ? fromTime || undefined : undefined,
+        toTime: period === "daily" ? toTime || undefined : undefined,
+      });
 
       saveBlob(file.blob, file.filename);
       setMessage("PDF report downloaded successfully.");
@@ -270,37 +321,71 @@ export default function ReportsPage() {
               Suparsale report command center
             </span>
 
-            <h1>Reports</h1>
+            <h1>Business reports</h1>
 
             <p>
-              Filter Suparsale Store Ltd activity by date and optional time, then
-              download a clean PDF report for sales, payments, cash, debts,
-              expenses, and stock risk.
+              See the owner numbers first. Download the PDF when you need the
+              full proof with sales, payments, debts, expenses, stock, and cash.
             </p>
           </div>
 
           <div className={`dashboard-hero-actions ${styles.heroActions}`}>
             <form onSubmit={handleFilter} className={styles.dateForm}>
+              <select
+                value={period}
+                onChange={(event) => {
+                  const nextPeriod = event.target.value as ReportPeriod;
+                  setPeriod(nextPeriod);
+                  setToDate(getDefaultToDate(nextPeriod, date));
+                  if (nextPeriod !== "daily") {
+                    setFromTime("");
+                    setToTime("");
+                  }
+                }}
+                aria-label="Report period"
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="custom">Custom</option>
+              </select>
+
               <input
                 type="date"
                 value={date}
-                onChange={(event) => setDate(event.target.value)}
-                aria-label="Report date"
+                onChange={(event) => {
+                  const nextDate = event.target.value;
+                  setDate(nextDate);
+                  setToDate(getDefaultToDate(period, nextDate));
+                }}
+                aria-label="Report start date"
               />
 
               <input
-                type="time"
-                value={fromTime}
-                onChange={(event) => setFromTime(event.target.value)}
-                aria-label="Report start time"
+                type="date"
+                value={toDate}
+                onChange={(event) => setToDate(event.target.value)}
+                disabled={period !== "custom"}
+                aria-label="Report end date"
               />
 
-              <input
-                type="time"
-                value={toTime}
-                onChange={(event) => setToTime(event.target.value)}
-                aria-label="Report end time"
-              />
+              {period === "daily" ? (
+                <>
+                  <input
+                    type="time"
+                    value={fromTime}
+                    onChange={(event) => setFromTime(event.target.value)}
+                    aria-label="Report start time"
+                  />
+
+                  <input
+                    type="time"
+                    value={toTime}
+                    onChange={(event) => setToTime(event.target.value)}
+                    aria-label="Report end time"
+                  />
+                </>
+              ) : null}
 
               <button className="btn btn-outline" type="submit">
                 <RefreshCw size={14} />
@@ -315,7 +400,7 @@ export default function ReportsPage() {
               disabled={!report || !canViewReports || !hasDownloadableData}
             >
               <Download size={14} />
-              Download PDF
+              Download {readablePeriod(period)} PDF
             </AsyncButton>
           </div>
         </section>
@@ -352,7 +437,7 @@ export default function ReportsPage() {
             <Loader2 className="spin" size={18} />
             <div>
               <strong>Loading report...</strong>
-              <p>Preparing owner financial summary for {date}.</p>
+              <p>Preparing {readablePeriod(period).toLowerCase()} owner report.</p>
             </div>
           </div>
         ) : null}
@@ -382,7 +467,7 @@ export default function ReportsPage() {
               </div>
 
               <div className={styles.statusGrid}>
-                <StatusMini label="Business date" value={report.businessDate} />
+                <StatusMini label="Report period" value={report.businessDate} />
                 <StatusMini
                   label="Time range"
                   value={
@@ -402,8 +487,12 @@ export default function ReportsPage() {
                   danger={report.summary.netProfitRwf < 0}
                 />
                 <StatusMini
-                  label="Report status"
-                  value={shopHealth.label}
+                  label="Action"
+                  value={
+                    shopHealth.label === "Clean"
+                      ? "Download / file"
+                      : "Review first"
+                  }
                   danger={shopHealth.label !== "Clean"}
                 />
               </div>
@@ -422,39 +511,12 @@ export default function ReportsPage() {
               />
 
               <ReportMetric
-                icon={<Banknote size={20} />}
-                label="Gross profit"
-                value={formatRwf(report.summary.grossProfitRwf)}
-                help="Sales minus estimated inventory cost"
-                badge="Gross"
-                badgeClass={grossProfitBadgeClass}
-              />
-
-              <ReportMetric
                 icon={<ShoppingCart size={20} />}
-                label="Revenue"
+                label="Sales"
                 value={formatRwf(report.summary.totalSalesRwf)}
                 help={`${report.summary.salesCount} sale(s) recorded`}
                 badge="Sales"
                 badgeClass="badge badge-green"
-              />
-
-              <ReportMetric
-                icon={<ReceiptText size={20} />}
-                label="Approved expenses"
-                value={formatRwf(report.summary.approvedExpensesRwf)}
-                help={`${report.summary.approvedExpensesCount} approved expense(s)`}
-                badge="Expense"
-                badgeClass="badge badge-blue"
-              />
-
-              <ReportMetric
-                icon={<Boxes size={20} />}
-                label="Cost of goods sold"
-                value={formatRwf(report.summary.estimatedCogsRwf)}
-                help="Estimated product cost sold today"
-                badge="COGS"
-                badgeClass="badge badge-blue"
               />
 
               <ReportMetric
@@ -464,49 +526,27 @@ export default function ReportsPage() {
                 help={`Paid on sales: ${formatRwf(
                   report.summary.amountPaidOnSalesRwf,
                 )}`}
-                badge="Cash in"
+                badge="Money in"
                 badgeClass="badge badge-green"
               />
 
               <ReportMetric
                 icon={<ReceiptText size={20} />}
-                label="Money spent"
-                value={formatRwf(report.summary.moneyOutRwf)}
-                help="All approved money-out movement"
-                badge="Cash out"
+                label="Expenses"
+                value={formatRwf(report.summary.approvedExpensesRwf)}
+                help={`${report.summary.approvedExpensesCount} approved expense(s)`}
+                badge="Money out"
                 badgeClass="badge badge-blue"
               />
 
               <ReportMetric
                 icon={<WalletCards size={20} />}
-                label="Net cash flow"
-                value={formatRwf(report.summary.netMoneyMovementRwf)}
-                help="Cash in minus cash out, not the same as profit"
-                badge="Flow"
-                badgeClass={cashFlowBadgeClass}
-              />
-
-              <ReportMetric
-                icon={<Users size={20} />}
                 label="Open customer debt"
                 value={formatRwf(report.summary.openCustomerDebtRwf)}
                 help={`${report.summary.overdueDebtCount} overdue debt(s)`}
-                badge="Debts"
+                badge="Collect"
                 badgeClass={
                   report.summary.openCustomerDebtRwf > 0
-                    ? "badge badge-blue"
-                    : "badge badge-green"
-                }
-              />
-
-              <ReportMetric
-                icon={<ReceiptText size={20} />}
-                label="Pending expenses"
-                value={formatRwf(report.summary.pendingExpensesRwf)}
-                help={`${report.summary.pendingExpensesCount} waiting owner review`}
-                badge="Approval"
-                badgeClass={
-                  report.summary.pendingExpensesCount > 0
                     ? "badge badge-blue"
                     : "badge badge-green"
                 }
@@ -529,6 +569,19 @@ export default function ReportsPage() {
                 badge="Empty"
                 badgeClass={
                   report.summary.zeroStockCount > 0
+                    ? "badge badge-blue"
+                    : "badge badge-green"
+                }
+              />
+
+              <ReportMetric
+                icon={<ReceiptText size={20} />}
+                label="Waiting approval"
+                value={formatRwf(report.summary.pendingExpensesRwf)}
+                help={`${report.summary.pendingExpensesCount} expense(s) waiting`}
+                badge="Approval"
+                badgeClass={
+                  report.summary.pendingExpensesCount > 0
                     ? "badge badge-blue"
                     : "badge badge-green"
                 }
@@ -883,8 +936,8 @@ export default function ReportsPage() {
                   <strong>Downloadable PDF proof is ready</strong>
                   <p>
                     The PDF is generated from saved database records. Use it as
-                    the daily proof file for sales, profit, expenses, debts,
-                    stock, and cash movement.
+                    the proof file for sales, profit, expenses, debts, stock,
+                    and cash movement. Full details stay inside the PDF.
                   </p>
                 </div>
               </section>

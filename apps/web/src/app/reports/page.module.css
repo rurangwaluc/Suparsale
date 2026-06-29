@@ -575,3 +575,126 @@
 
 
 
+
+/* Professional period report polish */
+.hero {
+  border-radius: 16px;
+}
+
+.hero :global(.hero-kicker),
+.hero :global(.dashboard-kicker) {
+  display: none;
+}
+
+.hero h1 {
+  letter-spacing: -1.3px;
+}
+
+.dateForm select,
+.dateForm input {
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--gray-900);
+  padding: 0 12px;
+  font-weight: 850;
+}
+
+.dateForm select {
+  min-width: 130px;
+}
+
+.summaryCardClean,
+.summaryCardWarning,
+.metricCard,
+.panel,
+.downloadReady,
+.warningNotice {
+  border-radius: 14px;
+  box-shadow: var(--sh-sm);
+}
+
+.metricsGrid {
+  gap: 12px;
+}
+
+.metricCard,
+.metricCard:nth-child(-n + 4),
+.metricCard:nth-child(n + 5) {
+  padding: 15px;
+}
+
+.metricValue,
+.statusMini strong,
+.summaryIntro strong,
+.summaryIntro span,
+.proofRow strong,
+.proofRow span,
+.reportItem strong,
+.reportItem span {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+@media (max-width: 760px) {
+  .hero {
+    border-radius: 14px;
+  }
+
+  .dateForm select {
+    width: 100%;
+  }
+}
+
+/* Owner-first report screen: keep details in PDF, not on the page */
+.reportGrid,
+.reportsPage > .panel {
+  display: none;
+}
+
+.hero {
+  border-radius: 16px;
+}
+
+.summaryCardClean,
+.summaryCardWarning {
+  border-radius: 14px;
+  box-shadow: var(--sh-sm);
+}
+
+.metricsGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metricCard,
+.metricCard:nth-child(-n + 4),
+.metricCard:nth-child(n + 5) {
+  min-height: auto;
+  opacity: 1;
+  border-radius: 14px;
+  padding: 15px;
+  box-shadow: var(--sh-sm);
+}
+
+.downloadReady {
+  margin-top: 0;
+  border-radius: 14px;
+}
+
+@media (max-width: 1180px) {
+  .metricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    border-radius: 14px;
+  }
+
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+}
