@@ -464,3 +464,110 @@
 
 
 
+
+/* Owner-first sale detail polish */
+.hero {
+  border-radius: 16px;
+}
+
+.hero :global(.hero-kicker),
+.hero :global(.dashboard-kicker) {
+  display: none;
+}
+
+.proofPanel {
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--sh-sm);
+}
+
+.proofIcon {
+  border-radius: 13px;
+}
+
+.metricsGrid {
+  gap: 12px;
+}
+
+.metricCard {
+  border-radius: 14px;
+  padding: 15px;
+  box-shadow: var(--sh-sm);
+}
+
+.metricValue {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.mainGridSingle {
+  grid-template-columns: 1fr;
+}
+
+.infoList {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.infoCard {
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--gray-50) 82%, var(--card));
+}
+
+.productGrid {
+  grid-template-columns: 1fr;
+}
+
+.productCard {
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.productCard .miniGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.paymentGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.paymentCard {
+  border-radius: 14px;
+}
+
+.installmentCard,
+.emptyCard,
+.miniInfo {
+  border-radius: 13px;
+}
+
+.section {
+  margin-top: 14px;
+}
+
+@media (max-width: 1180px) {
+  .infoList {
+    grid-template-columns: 1fr;
+  }
+
+  .productCard .miniGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .metricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .productCard .miniGrid,
+  .paymentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+}

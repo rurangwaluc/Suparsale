@@ -123,16 +123,11 @@ export default function SaleDetailsPage() {
       <div className={styles.page}>
         <section className={`dashboard-hero ${styles.hero}`}>
           <div className={styles.heroCopy}>
-            <span className="hero-kicker dashboard-kicker">
-              <ReceiptText size={15} />
-              Sale record
-            </span>
-
             <h1>{sale?.saleNumber || "Sale details"}</h1>
 
             <p>
-              Full proof of the sale: customer, products sold, amount paid,
-              remaining balance, debt, and installment schedule.
+              See what was sold, who paid, how much was received, and whether
+              any balance remains.
             </p>
           </div>
 
@@ -184,7 +179,7 @@ export default function SaleDetailsPage() {
                 </div>
 
                 <div>
-                  <span>Sale proof</span>
+                  <span>Sale status</span>
                   <strong>
                     {fullyPaid
                       ? "This sale is fully paid"
@@ -246,13 +241,19 @@ export default function SaleDetailsPage() {
               />
             </div>
 
-            <div className={styles.mainGrid}>
+            <div
+              className={
+                debt || hasInstallments
+                  ? styles.mainGrid
+                  : `${styles.mainGrid} ${styles.mainGridSingle}`
+              }
+            >
               <section className="table-card premium-panel">
                 <div className="table-card-header">
                   <div>
-                    <div className="table-title">Customer and payment</div>
+                    <div className="table-title">Customer</div>
                     <div className="app-subtitle">
-                      Who bought, who sold, and payment state.
+                      Buyer, seller, and payment state.
                     </div>
                   </div>
                 </div>
@@ -291,41 +292,38 @@ export default function SaleDetailsPage() {
                 </div>
               </section>
 
-              <section className="table-card premium-panel">
-                <div className="table-card-header">
-                  <div>
-                    <div className="table-title">Debt record</div>
-                    <div className="app-subtitle">
-                      Appears when customer did not fully pay.
+              {debt || hasInstallments ? (
+                <section className="table-card premium-panel">
+                  <div className="table-card-header">
+                    <div>
+                      <div className="table-title">Balance to collect</div>
+                      <div className="app-subtitle">
+                        Only appears when the customer did not fully pay.
+                      </div>
                     </div>
+
+                    {hasInstallments ? (
+                      <span className="badge badge-blue">Installment plan</span>
+                    ) : null}
                   </div>
 
-                  {hasInstallments ? (
-                    <span className="badge badge-blue">Installment plan</span>
-                  ) : null}
-                </div>
-
-                <div className={styles.infoList}>
-                  {debt ? (
-                    <InfoCard icon={<WalletCards size={17} />}>
-                      <strong>
-                        {debt.balanceRwf > 0 ? "Open debt" : "Debt cleared"}
-                      </strong>
-                      <span>Original: {formatRwf(debt.originalAmountRwf)}</span>
-                      <span>Paid: {formatRwf(debt.amountPaidRwf)}</span>
-                      <span>Balance: {formatRwf(debt.balanceRwf)}</span>
-                      <span>
-                        Expected: {formatDate(debt.expectedPaymentAt)}
-                      </span>
-                    </InfoCard>
-                  ) : (
-                    <InfoCard icon={<CheckCircle2 size={17} />}>
-                      <strong>No debt created</strong>
-                      <span>This sale was fully paid at creation time.</span>
-                    </InfoCard>
-                  )}
-                </div>
-              </section>
+                  <div className={styles.infoList}>
+                    {debt ? (
+                      <InfoCard icon={<WalletCards size={17} />}>
+                        <strong>
+                          {debt.balanceRwf > 0 ? "Open balance" : "Balance cleared"}
+                        </strong>
+                        <span>Original: {formatRwf(debt.originalAmountRwf)}</span>
+                        <span>Paid: {formatRwf(debt.amountPaidRwf)}</span>
+                        <span>Balance: {formatRwf(debt.balanceRwf)}</span>
+                        <span>
+                          Expected: {formatDate(debt.expectedPaymentAt)}
+                        </span>
+                      </InfoCard>
+                    ) : null}
+                  </div>
+                </section>
+              ) : null}
             </div>
 
             {hasInstallments ? (
@@ -392,7 +390,7 @@ export default function SaleDetailsPage() {
                 <div>
                   <div className="table-title">Products sold</div>
                   <div className="app-subtitle">
-                    These items were removed from stock when the sale was saved.
+                    Items removed from stock for this sale.
                   </div>
                 </div>
               </div>
@@ -441,8 +439,7 @@ export default function SaleDetailsPage() {
                 <div>
                   <div className="table-title">Payments received</div>
                   <div className="app-subtitle">
-                    Payments recorded during sale creation or later debt
-                    payment.
+                    Money received for this sale.
                   </div>
                 </div>
 
