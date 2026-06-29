@@ -222,3 +222,111 @@ export async function downloadDailySummaryPdf(
     filename,
   };
 }
+
+export type ReportPeriod = "daily" | "weekly" | "monthly" | "custom";
+
+export type BusinessSummaryReportResponse = {
+  ok: true;
+  period: {
+    period: ReportPeriod;
+    fromDate: string;
+    toDate: string;
+    title: string;
+    label: string;
+    filenamePart: string;
+  };
+  report: DailySummaryReport;
+};
+
+export async function getBusinessSummaryReport(
+  token: string,
+  input: {
+    period: ReportPeriod;
+    fromDate: string;
+    toDate?: string;
+    fromTime?: string;
+    toTime?: string;
+  },
+) {
+  const query = new URLSearchParams();
+
+  query.set("period", input.period);
+  query.set("fromDate", input.fromDate);
+
+  if (input.toDate) query.set("toDate", input.toDate);
+  if (input.period === "daily" && input.fromTime) {
+    query.set("fromTime", input.fromTime);
+  }
+  if (input.period === "daily" && input.toTime) {
+    query.set("toTime", input.toTime);
+  }
+
+  return apiRequest<BusinessSummaryReportResponse>(
+    `/reports/business-summary?${query.toString()}`,
+    {
+      method: "GET",
+      token,
+    },
+  );
+}
+
+export async function downloadBusinessSummaryPdf(
+  token: string,
+  input: {
+    period: ReportPeriod;
+    fromDate: string;
+    toDate?: string;
+    fromTime?: string;
+    toTime?: string;
+  },
+) {
+  const query = new URLSearchParams();
+
+  query.set("period", input.period);
+  query.set("fromDate", input.fromDate);
+
+  if (input.toDate) query.set("toDate", input.toDate);
+  if (input.period === "daily" && input.fromTime) {
+    query.set("fromTime", input.fromTime);
+  }
+  if (input.period === "daily" && input.toTime) {
+    query.set("toTime", input.toTime);
+  }
+
+  const response = await fetch(
+    `${getApiBaseUrl()}/reports/business-summary/pdf?${query.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    let message = "Could not download report PDF.";
+
+    try {
+      const data = await response.json();
+
+      if (data?.message) {
+        message = data.message;
+      }
+    } catch {
+      // PDF endpoint may not return JSON on every error.
+    }
+
+    throw new Error(message);
+  }
+
+  const blob = await response.blob();
+  const contentDisposition = response.headers.get("content-disposition");
+  const filename =
+    getFileNameFromContentDisposition(contentDisposition) ||
+    `suparsale-${input.period}-report-${input.fromDate}.pdf`;
+
+  return {
+    blob,
+    filename,
+  };
+}

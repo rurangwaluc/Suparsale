@@ -45,6 +45,47 @@ const reportQuerySchema = z
     },
   );
 
+const businessReportQuerySchema = z
+  .object({
+    period: z.enum(["daily", "weekly", "monthly", "custom"]).default("daily"),
+    fromDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
+    toDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
+    fromTime: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/)
+      .optional(),
+    toTime: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/)
+      .optional(),
+  })
+  .refine(
+    (value) => {
+      if (!value.fromDate || !value.toDate) return true;
+      return value.fromDate <= value.toDate;
+    },
+    {
+      message: "Start date must be before end date.",
+      path: ["toDate"],
+    },
+  )
+  .refine(
+    (value) => {
+      if (!value.fromTime || !value.toTime) return true;
+      return value.fromTime <= value.toTime;
+    },
+    {
+      message: "Start time must be before end time.",
+      path: ["toTime"],
+    },
+  );
+
 type AuthReportUser = {
   id: string;
   name?: string | null;
@@ -213,6 +254,105 @@ function getDateRange(
   return {
     start,
     end,
+  };
+}
+
+function parseBusinessDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+
+  return new Date(year, month - 1, day);
+}
+
+function formatBusinessDate(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+
+  return `${y}-${m}-${d}`;
+}
+
+function addDays(value: string, days: number) {
+  const date = parseBusinessDate(value);
+  date.setDate(date.getDate() + days);
+
+  return formatBusinessDate(date);
+}
+
+function getMonthEnd(value: string) {
+  const date = parseBusinessDate(value);
+  const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+  return formatBusinessDate(monthEnd);
+}
+
+function getDateList(fromDate: string, toDate: string) {
+  const dates: string[] = [];
+  let cursor = fromDate;
+
+  while (cursor <= toDate) {
+    dates.push(cursor);
+    cursor = addDays(cursor, 1);
+
+    if (dates.length > 370) break;
+  }
+
+  return dates;
+}
+
+function resolveBusinessReportRange(input: {
+  period: "daily" | "weekly" | "monthly" | "custom";
+  fromDate?: string;
+  toDate?: string;
+}) {
+  const fromDate = input.fromDate || makeBusinessDate();
+
+  if (input.period === "daily") {
+    return {
+      period: input.period,
+      fromDate,
+      toDate: fromDate,
+      title: "Daily Business Report",
+      label: fromDate,
+      filenamePart: `daily-report-${fromDate}`,
+    };
+  }
+
+  if (input.period === "weekly") {
+    const toDate = input.toDate || addDays(fromDate, 6);
+
+    return {
+      period: input.period,
+      fromDate,
+      toDate,
+      title: "Weekly Business Report",
+      label: `${fromDate} to ${toDate}`,
+      filenamePart: `weekly-report-${fromDate}-to-${toDate}`,
+    };
+  }
+
+  if (input.period === "monthly") {
+    const toDate = input.toDate || getMonthEnd(fromDate);
+    const monthPart = fromDate.slice(0, 7);
+
+    return {
+      period: input.period,
+      fromDate,
+      toDate,
+      title: "Monthly Business Report",
+      label: `${fromDate} to ${toDate}`,
+      filenamePart: `monthly-report-${monthPart}`,
+    };
+  }
+
+  const toDate = input.toDate || fromDate;
+
+  return {
+    period: input.period,
+    fromDate,
+    toDate,
+    title: "Custom Business Report",
+    label: `${fromDate} to ${toDate}`,
+    filenamePart: `custom-report-${fromDate}-to-${toDate}`,
   };
 }
 
@@ -662,6 +802,179 @@ async function buildDailySummaryReport(input: {
   void salePaymentRows;
 
   return report;
+}
+
+function mergePeriodReports(input: {
+  reports: DailySummaryReport[];
+  title: string;
+  label: string;
+  generatedBy: string;
+  fromTime?: string | null;
+  toTime?: string | null;
+}) {
+  const reports = input.reports;
+  const first = reports[0];
+  const last = reports[reports.length - 1] || first;
+
+  if (!first) {
+    throw new Error("No reports to merge.");
+  }
+
+  const sumSummary = (key: keyof DailySummaryReport["summary"]) =>
+    reports.reduce((sum, report) => sum + Number(report.summary[key] || 0), 0);
+
+  const moneyIn = emptyMethodTotals();
+  const moneyOut = emptyMethodTotals();
+
+  for (const report of reports) {
+    moneyIn.cash += report.methodTotals.moneyIn.cash;
+    moneyIn.momo += report.methodTotals.moneyIn.momo;
+    moneyIn.bank += report.methodTotals.moneyIn.bank;
+    moneyIn.card += report.methodTotals.moneyIn.card;
+    moneyIn.other += report.methodTotals.moneyIn.other;
+
+    moneyOut.cash += report.methodTotals.moneyOut.cash;
+    moneyOut.momo += report.methodTotals.moneyOut.momo;
+    moneyOut.bank += report.methodTotals.moneyOut.bank;
+    moneyOut.card += report.methodTotals.moneyOut.card;
+    moneyOut.other += report.methodTotals.moneyOut.other;
+  }
+
+  const totalSalesRwf = sumSummary("totalSalesRwf");
+  const estimatedCogsRwf = sumSummary("estimatedCogsRwf");
+  const approvedExpensesRwf = sumSummary("approvedExpensesRwf");
+  const grossProfitRwf = totalSalesRwf - estimatedCogsRwf;
+  const netProfitRwf = grossProfitRwf - approvedExpensesRwf;
+  const profitMarginPercent =
+    totalSalesRwf > 0
+      ? Number(((netProfitRwf / totalSalesRwf) * 100).toFixed(1))
+      : 0;
+
+  const amountPaidOnSalesRwf = sumSummary("amountPaidOnSalesRwf");
+  const ledgerSalePaymentsRwf = sumSummary("ledgerSalePaymentsRwf");
+  const salePaymentDifferenceRwf =
+    amountPaidOnSalesRwf - ledgerSalePaymentsRwf;
+
+  const salesRows = reports
+    .flatMap((report) => report.salesRows)
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+  const moneyRows = reports
+    .flatMap((report) => report.moneyRows)
+    .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+  const expenseRows = reports
+    .flatMap((report) => report.expenseRows)
+    .sort(
+      (a, b) =>
+        new Date(b.paidAt || 0).getTime() - new Date(a.paidAt || 0).getTime(),
+    );
+
+  const merged: DailySummaryReport = {
+    ...first,
+    reportTitle: input.title,
+    businessDate: input.label,
+    fromTime: input.fromTime || null,
+    toTime: input.toTime || null,
+    generatedAt: new Date().toISOString(),
+    generatedBy: input.generatedBy,
+
+    cashSession: reports.length === 1 ? first.cashSession : null,
+
+    summary: {
+      totalSalesRwf,
+      amountPaidOnSalesRwf,
+      salesBalanceRwf: sumSummary("salesBalanceRwf"),
+      salesCount: sumSummary("salesCount"),
+
+      estimatedCogsRwf,
+      grossProfitRwf,
+      netProfitRwf,
+      profitMarginPercent,
+
+      moneyInRwf: sumSummary("moneyInRwf"),
+      moneyOutRwf: sumSummary("moneyOutRwf"),
+      netMoneyMovementRwf: sumSummary("moneyInRwf") - sumSummary("moneyOutRwf"),
+
+      approvedExpensesRwf,
+      approvedExpensesCount: sumSummary("approvedExpensesCount"),
+
+      pendingExpensesRwf: Number(last.summary.pendingExpensesRwf || 0),
+      pendingExpensesCount: Number(last.summary.pendingExpensesCount || 0),
+
+      newCustomerDebtRwf: sumSummary("newCustomerDebtRwf"),
+      debtPaymentsReceivedRwf: sumSummary("debtPaymentsReceivedRwf"),
+      openCustomerDebtRwf: Number(last.summary.openCustomerDebtRwf || 0),
+      overdueDebtCount: Number(last.summary.overdueDebtCount || 0),
+
+      stockValueRwf: Number(last.summary.stockValueRwf || 0),
+      lowStockCount: Number(last.summary.lowStockCount || 0),
+      zeroStockCount: Number(last.summary.zeroStockCount || 0),
+
+      ledgerSalePaymentsRwf,
+      salePaymentDifferenceRwf,
+      dataCheckStatus:
+        salePaymentDifferenceRwf === 0 ? "clean" : "needs_review",
+    },
+
+    methodTotals: {
+      moneyIn,
+      moneyOut,
+    },
+
+    salesRows: salesRows.slice(0, 60),
+    moneyRows: moneyRows.slice(0, 80),
+    expenseRows: expenseRows.slice(0, 60),
+    debtRows: last.debtRows,
+    lowStockRows: last.lowStockRows,
+  };
+
+  return merged;
+}
+
+async function buildBusinessSummaryReport(input: {
+  period: "daily" | "weekly" | "monthly" | "custom";
+  fromDate?: string;
+  toDate?: string;
+  fromTime?: string | null;
+  toTime?: string | null;
+  generatedBy: string;
+}) {
+  const range = resolveBusinessReportRange({
+    period: input.period,
+    fromDate: input.fromDate,
+    toDate: input.toDate,
+  });
+
+  const dateList = getDateList(range.fromDate, range.toDate);
+
+  const dailyReports = [];
+
+  for (const businessDate of dateList) {
+    dailyReports.push(
+      await buildDailySummaryReport({
+        businessDate,
+        fromTime: range.period === "daily" ? input.fromTime : null,
+        toTime: range.period === "daily" ? input.toTime : null,
+        generatedBy: input.generatedBy,
+      }),
+    );
+  }
+
+  return {
+    report: mergePeriodReports({
+      reports: dailyReports,
+      title: range.title,
+      label: range.label,
+      generatedBy: input.generatedBy,
+      fromTime: range.period === "daily" ? input.fromTime : null,
+      toTime: range.period === "daily" ? input.toTime : null,
+    }),
+    range,
+  };
 }
 
 function reportHasDownloadableData(report: DailySummaryReport) {
@@ -1532,6 +1845,86 @@ function buildDailySummaryPdf(report: DailySummaryReport) {
 }
 
 export async function reportsRoutes(app: FastifyInstance) {
+  app.get(
+    "/business-summary",
+    {
+      preHandler: [requireAuth, requirePermission("reports.view")],
+    },
+    async (request, reply) => {
+      const query = businessReportQuerySchema.safeParse(request.query);
+
+      if (!query.success) {
+        return reply.code(400).send({
+          ok: false,
+          message: "Invalid report period or date range.",
+        });
+      }
+
+      const auth = request.authUser! as AuthReportUser;
+
+      const { report, range } = await buildBusinessSummaryReport({
+        period: query.data.period,
+        fromDate: query.data.fromDate,
+        toDate: query.data.toDate,
+        fromTime: query.data.fromTime,
+        toTime: query.data.toTime,
+        generatedBy: auth.name || auth.email || auth.id,
+      });
+
+      return {
+        ok: true,
+        period: range,
+        report,
+      };
+    },
+  );
+
+  app.get(
+    "/business-summary/pdf",
+    {
+      preHandler: [requireAuth, requirePermission("reports.view")],
+    },
+    async (request, reply) => {
+      const query = businessReportQuerySchema.safeParse(request.query);
+
+      if (!query.success) {
+        return reply.code(400).send({
+          ok: false,
+          message: "Invalid report period or date range.",
+        });
+      }
+
+      const auth = request.authUser! as AuthReportUser;
+
+      const { report, range } = await buildBusinessSummaryReport({
+        period: query.data.period,
+        fromDate: query.data.fromDate,
+        toDate: query.data.toDate,
+        fromTime: query.data.fromTime,
+        toTime: query.data.toTime,
+        generatedBy: auth.name || auth.email || auth.id,
+      });
+
+      if (!reportHasDownloadableData(report)) {
+        return reply.code(404).send({
+          ok: false,
+          message: "No report data found for this period. Nothing to download.",
+        });
+      }
+
+      const pdfBuffer = await buildDailySummaryPdf(report);
+      const timePart =
+        range.period === "daily" && (query.data.fromTime || query.data.toTime)
+          ? `-${query.data.fromTime || "00-00"}-to-${query.data.toTime || "23-59"}`.replace(/:/g, "-")
+          : "";
+      const filename = `suparsale-${range.filenamePart}${timePart}.pdf`;
+
+      return reply
+        .header("Content-Type", "application/pdf")
+        .header("Content-Disposition", `attachment; filename="${filename}"`)
+        .send(pdfBuffer);
+    },
+  );
   app.get(
     "/daily-summary",
     {
