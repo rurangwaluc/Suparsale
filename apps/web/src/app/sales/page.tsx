@@ -107,6 +107,8 @@ export default function SalesPage() {
   const [salesSummary, setSalesSummary] = useState<SalesSummary | null>(null);
   const [recentSales, setRecentSales] = useState<SaleListItem[]>([]);
   const [attentionSales, setAttentionSales] = useState<SaleListItem[]>([]);
+  const [salesSearch, setSalesSearch] = useState("");
+  const [salesSearching, setSalesSearching] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -274,7 +276,7 @@ export default function SalesPage() {
         getCustomers(token),
         getCashToday(token),
         getSalesSummary(token),
-        getSales(token, { limit: 20 }),
+        getSales(token, { limit: 5 }),
       ]);
 
       setProducts(productsResponse.products);
@@ -289,6 +291,56 @@ export default function SalesPage() {
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function searchSalesHistory(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+
+    const token = getToken();
+    if (!token) return;
+
+    setSalesSearching(true);
+    setMessage("");
+
+    try {
+      const response = await getSales(token, {
+        limit: 5,
+        search: salesSearch.trim() || undefined,
+      });
+
+      setRecentSales(response.sales);
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not search sales history.",
+      );
+    } finally {
+      setSalesSearching(false);
+    }
+  }
+
+  async function clearSalesSearch() {
+    setSalesSearch("");
+
+    const token = getToken();
+    if (!token) return;
+
+    setSalesSearching(true);
+    setMessage("");
+
+    try {
+      const response = await getSales(token, { limit: 5 });
+      setRecentSales(response.sales);
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not reload latest sales.",
+      );
+    } finally {
+      setSalesSearching(false);
     }
   }
 
@@ -728,14 +780,47 @@ export default function SalesPage() {
                 <ReceiptText size={14} />
                 Sales history
               </span>
-              <h2>Sales list</h2>
-              <p>Open any sale to check products, payment, balance, and customer details.</p>
+              <h2>Sales history</h2>
+              <p>Showing the latest 5 sales. Use search later to find older sales.</p>
             </div>
 
             <span className="badge badge-blue">
-              {recentSales.length} latest
+              {salesSearch.trim() ? `${recentSales.length} found` : `Latest ${recentSales.length}`}
             </span>
           </div>
+
+          <form className={styles.historySearch} onSubmit={searchSalesHistory}>
+            <div className={styles.historySearchBox}>
+              <Search size={14} />
+              <input
+                value={salesSearch}
+                onChange={(event) => setSalesSearch(event.target.value)}
+                placeholder="Search sale number, customer, phone, or status..."
+              />
+            </div>
+
+            <button
+              className="btn btn-outline"
+              type="button"
+              onClick={clearSalesSearch}
+              disabled={salesSearching || !salesSearch.trim()}
+            >
+              Clear
+            </button>
+
+            <button
+              className="btn btn-primary"
+              type="submit"
+              disabled={salesSearching}
+            >
+              {salesSearching ? (
+                <Loader2 className="spin" size={14} />
+              ) : (
+                <Search size={14} />
+              )}
+              Search
+            </button>
+          </form>
 
           <div className={styles.salesTableWrap}>
             <div className={styles.salesTable}>
@@ -788,8 +873,12 @@ export default function SalesPage() {
               {recentSales.length === 0 ? (
                 <div className={styles.historyEmpty}>
                   <ShoppingCart size={20} />
-                  <strong>No sales yet</strong>
-                  <span>Created sales will appear here.</span>
+                  <strong>{salesSearch.trim() ? "No matching sale" : "No sales yet"}</strong>
+                  <span>
+                    {salesSearch.trim()
+                      ? "Try sale number, customer name, phone, or status."
+                      : "Created sales will appear here."}
+                  </span>
                 </div>
               ) : null}
             </div>

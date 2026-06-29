@@ -1437,3 +1437,53 @@
     min-width: 860px;
   }
 }
+
+.historySearch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.historySearchBox {
+  min-width: 0;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--gray-50);
+  color: var(--gray-400);
+  padding: 0 14px;
+}
+
+.historySearchBox input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--gray-900);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.historySearchBox input::placeholder {
+  color: var(--gray-400);
+}
+
+.historySearchBox:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
+}
+
+@media (max-width: 760px) {
+  .historySearch {
+    grid-template-columns: 1fr;
+  }
+
+  .historySearch :global(.btn) {
+    width: 100%;
+  }
+}
