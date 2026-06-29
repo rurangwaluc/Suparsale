@@ -213,10 +213,11 @@ export async function expensesRoutes(app: FastifyInstance) {
 
       const isOwner = auth.role === "owner";
 
+      const requiresCashDrawer = data.method === "cash";
       let cashControl: Awaited<ReturnType<typeof requireOpenCashSession>> =
         null;
 
-      if (isOwner) {
+      if (isOwner && requiresCashDrawer) {
         cashControl = await requireOpenCashSession(
           reply,
           makeBusinessDate(paidAt),
@@ -249,12 +250,12 @@ export async function expensesRoutes(app: FastifyInstance) {
 
         let ledgerEntry = null;
 
-        if (isOwner && cashControl) {
+        if (isOwner) {
           const [entry] = await tx
             .insert(moneyLedger)
             .values({
-              businessDate: cashControl.businessDate,
-              cashSessionId: cashControl.session.id,
+              businessDate: cashControl?.businessDate || makeBusinessDate(paidAt),
+              cashSessionId: cashControl?.session.id || null,
               direction: "money_out",
               amountRwf: data.amountRwf,
               method: data.method,
@@ -420,12 +421,12 @@ export async function expensesRoutes(app: FastifyInstance) {
 
       const paidAt = new Date();
 
-      const cashControl = await requireOpenCashSession(
-        reply,
-        makeBusinessDate(paidAt),
-      );
+      const requiresCashDrawer = oldExpense.method === "cash";
+      const cashControl = requiresCashDrawer
+        ? await requireOpenCashSession(reply, makeBusinessDate(paidAt))
+        : null;
 
-      if (!cashControl) {
+      if (requiresCashDrawer && !cashControl) {
         return;
       }
 
@@ -433,8 +434,8 @@ export async function expensesRoutes(app: FastifyInstance) {
         const [ledgerEntry] = await tx
           .insert(moneyLedger)
           .values({
-            businessDate: cashControl.businessDate,
-            cashSessionId: cashControl.session.id,
+            businessDate: cashControl?.businessDate || makeBusinessDate(paidAt),
+            cashSessionId: cashControl?.session.id || null,
             direction: "money_out",
             amountRwf: oldExpense.amountRwf,
             method: oldExpense.method,

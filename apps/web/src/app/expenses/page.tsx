@@ -108,7 +108,7 @@ export default function ExpensesPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  const [visibleCount, setVisibleCount] = useState(10);
+  const [visibleCount, setVisibleCount] = useState(8);
 
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
@@ -126,11 +126,13 @@ export default function ExpensesPage() {
   const canApproveExpense = hasPermission(user, "expenses.approve");
 
   const isCashOpen = cashSession?.status === "open";
+  const expenseNeedsCashDrawer = method === "cash";
+  const cashBlocksExpense = expenseNeedsCashDrawer && !isCashOpen;
 
   const cashMessage = !cashSession
-    ? "Cash session is not open. Open cash before recording paid expenses."
+    ? "Cash drawer is not open. Cash expenses need an open cash drawer."
     : cashSession.status === "closed"
-      ? "Cash session is closed. Paid expenses are blocked for this business date."
+      ? "Cash drawer is closed. Choose MoMo, Bank, Card, Other, or open cash."
       : "";
 
   const approvedExpenses = useMemo(
@@ -223,7 +225,7 @@ export default function ExpensesPage() {
       setCashSession(cashResponse.session);
       setExpenses(expensesResponse.expenses);
       setCategories(categoriesResponse.categories);
-      setVisibleCount(10);
+      setVisibleCount(8);
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Could not load expenses.",
@@ -307,8 +309,8 @@ export default function ExpensesPage() {
       return;
     }
 
-    if (!isCashOpen && user?.role === "owner") {
-      setMessage(cashMessage || "Open cash before recording paid expenses.");
+    if (user?.role === "owner" && cashBlocksExpense) {
+      setMessage(cashMessage || "Open cash drawer before recording cash expense.");
       return;
     }
 
@@ -353,8 +355,8 @@ export default function ExpensesPage() {
       return;
     }
 
-    if (!isCashOpen) {
-      setMessage(cashMessage || "Open cash before approving paid expenses.");
+    if (expense.method === "cash" && !isCashOpen) {
+      setMessage(cashMessage || "Open cash drawer before approving cash expense.");
       return;
     }
 
@@ -434,14 +436,14 @@ export default function ExpensesPage() {
           <div className={styles.heroCopy}>
             <span className="hero-kicker dashboard-kicker">
               <ReceiptText size={15} />
-              Shop money out
+              Money out
             </span>
 
-            <h1>Expenses</h1>
+            <h1>Business spending</h1>
 
             <p>
-              Record shop costs, keep owner approval, and connect approved
-              expenses to the money ledger.
+              See what the business spent, what is waiting for approval, and
+              which expenses already affected the money ledger.
             </p>
           </div>
 
@@ -481,8 +483,8 @@ export default function ExpensesPage() {
 
         {!isCashOpen ? (
           <NoticeCard
-            title="Paid expenses are blocked"
-            text={cashMessage}
+            title="Cash drawer is closed"
+            text="Only cash expenses need an open cash drawer. MoMo, Bank, Card, and Other expenses can still be recorded."
             actionLabel={cashSession ? "View cash" : "Open cash"}
             onAction={() => router.push("/cash")}
           />
@@ -531,9 +533,10 @@ export default function ExpensesPage() {
         <section className={styles.listPanel}>
           <div className={styles.panelHeader}>
             <div>
-              <div className="table-title">Expense list</div>
+              <div className="table-title">Expense history</div>
               <div className="app-subtitle">
-                Search, submit, approve, reject, and deactivate expense records.
+                Latest 8 expenses are shown. Search older records by number,
+                title, category, or status.
               </div>
             </div>
 
@@ -689,7 +692,7 @@ export default function ExpensesPage() {
               <button
                 className="btn btn-outline"
                 type="button"
-                onClick={() => setVisibleCount((current) => current + 10)}
+                onClick={() => setVisibleCount((current) => current + 8)}
               >
                 Load more expenses
               </button>
@@ -867,17 +870,17 @@ export default function ExpensesPage() {
                     />
                   </label>
 
-                  {user?.role === "owner" && !isCashOpen ? (
+                  {user?.role === "owner" && cashBlocksExpense ? (
                     <div className={styles.modalWarning}>
-                      Open cash first. Owner expenses are paid immediately, so
-                      the money ledger needs an open cash session.
+                      Open cash first, or choose MoMo, Bank, Card, or Other.
+                      Only cash expenses need an open cash drawer.
                     </div>
                   ) : null}
 
                   <ModalFooter
                     saving={saving}
                     onCancel={closeModal}
-                    disabled={user?.role === "owner" && !isCashOpen}
+                    disabled={user?.role === "owner" && cashBlocksExpense}
                     label={
                       user?.role === "owner"
                         ? "Record expense"

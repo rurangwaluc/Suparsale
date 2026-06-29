@@ -580,3 +580,75 @@
 
 
 
+
+/* Owner-first expenses polish */
+.hero {
+  border-radius: 16px;
+}
+
+.hero :global(.hero-kicker),
+.hero :global(.dashboard-kicker) {
+  display: none;
+}
+
+.hero h1 {
+  letter-spacing: -1.3px;
+}
+
+.metricsGrid {
+  gap: 12px;
+}
+
+.metricCard,
+.listPanel {
+  border-radius: 14px;
+  box-shadow: var(--sh-sm);
+}
+
+.metricCard {
+  padding: 15px;
+}
+
+.metricValue,
+.detailBlock strong,
+.expenseTop strong,
+.expenseDescription {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.expenseCard {
+  border-radius: 14px;
+  background: var(--card);
+  padding: 13px;
+}
+
+.expenseDetailsGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.detailBlock {
+  border-radius: 12px;
+}
+
+.noticeCard {
+  border-radius: 14px;
+  box-shadow: var(--sh-sm);
+}
+
+@media (max-width: 1180px) {
+  .expenseDetailsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    border-radius: 14px;
+  }
+
+  .expenseDetailsGrid {
+    grid-template-columns: 1fr;
+  }
+}
