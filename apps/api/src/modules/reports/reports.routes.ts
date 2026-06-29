@@ -1065,7 +1065,7 @@ function drawTopHeader(doc: PDFKit.PDFDocument, report: DailySummaryReport) {
     .text(
       report.fromTime || report.toTime
         ? `Filtered by time: ${report.fromTime || "00:00"} - ${report.toTime || "23:59"}`
-        : "Generated from database records: sales, cash, debts, expenses, stock, and money ledger.",
+        : "Generated from saved business records: sales, cash, debts, expenses, stock, and money movement.",
       175,
       79,
       { width: 360, align: "right" },
@@ -1135,7 +1135,7 @@ function drawReportIdentity(
     .font("Helvetica")
     .fontSize(8)
     .text(
-      "This report is intended to help the shop owner verify money, stock, customer debt, expenses, and daily activity.",
+      "This report helps the owner review sales, payments, cash, expenses, stock, and customer balances.",
       58,
       y + 60,
       { width: doc.page.width - 116 },
@@ -1409,9 +1409,10 @@ function drawCashSessionProof(
 
 function drawDataCheck(doc: PDFKit.PDFDocument, report: DailySummaryReport) {
   const isClean = report.summary.dataCheckStatus === "clean";
-  const y = doc.y;
 
   ensureSpace(doc, 98);
+
+  const y = doc.y;
 
   doc
     .roundedRect(40, y, doc.page.width - 80, 86, 10)
@@ -1483,7 +1484,7 @@ function drawProofStatement(doc: PDFKit.PDFDocument) {
     .font("Helvetica")
     .fontSize(8.5)
     .text(
-      "Owner should review this report before keeping it as the final daily shop proof.",
+      "Owner should review this report before keeping or sharing it as the final business file.",
       58,
       y + 36,
       { width: doc.page.width - 116, lineGap: 2 },
@@ -1494,7 +1495,7 @@ function drawProofStatement(doc: PDFKit.PDFDocument) {
     .font("Helvetica-Bold")
     .fontSize(8)
     .text(
-      "Owner review recommended before final filing, especially after reopening cash or correcting old test data.",
+      "Owner review is recommended before final filing, especially when cash was reopened or corrections were made.",
       58,
       y + 74,
       { width: doc.page.width - 116 },
@@ -1524,7 +1525,7 @@ function addPageNumbers(doc: PDFKit.PDFDocument) {
       .font("Helvetica")
       .fontSize(7)
       .text(
-        "Daily shop proof file generated from saved system records.",
+        "Business report generated from saved system records.",
         40,
         footerTextY,
         {
@@ -1561,8 +1562,8 @@ function buildDailySummaryPdf(report: DailySummaryReport) {
       info: {
         Title: `${report.reportTitle} - ${report.businessDate}`,
         Author: report.businessName,
-        Subject: "Daily shop control report for Suparsale Store Ltd",
-        Creator: "Suparsale Store Ltd",
+        Subject: "Business report generated from saved sales, cash, expenses, debts, stock, and money records",
+        Creator: "Suparsale Business System",
       },
     });
 
@@ -1577,8 +1578,8 @@ function buildDailySummaryPdf(report: DailySummaryReport) {
 
     sectionTitle(
       doc,
-      "Executive Summary",
-      "Owner-level view of sales, money, debts, expenses, stock, and cash control.",
+      "Owner Summary",
+      "The most important business numbers for this report period.",
     );
 
     metricGrid(doc, [
@@ -1640,22 +1641,22 @@ function buildDailySummaryPdf(report: DailySummaryReport) {
 
     sectionTitle(
       doc,
-      "Payment Check",
-      "Compare money paid on sales with saved money records.",
+      "Payment Match Check",
+      "Confirms sales payments match saved money movement records.",
     );
     drawDataCheck(doc, report);
 
     sectionTitle(
       doc,
-      "Cash Session Proof",
-      "Drawer control for the selected business date.",
+      "Cash Drawer Proof",
+      "Cash drawer status and expected physical cash.",
     );
     drawCashSessionProof(doc, report);
 
     sectionTitle(
       doc,
-      "Payment Method Breakdown",
-      "Money received and money spent by payment method.",
+      "Payment Method Summary",
+      "Money received and spent through Cash, MoMo, Bank, Card, and Other.",
     );
     drawTable(doc, {
       columns: [
@@ -1812,8 +1813,8 @@ function buildDailySummaryPdf(report: DailySummaryReport) {
 
     sectionTitle(
       doc,
-      "Money Ledger Proof",
-      "Latest money records for the selected business date.",
+      "Money Movement Proof",
+      "Latest saved money-in and money-out records for this report.",
     );
     drawTable(doc, {
       columns: [
