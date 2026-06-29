@@ -276,9 +276,12 @@ export async function debtsRoutes(app: FastifyInstance) {
       const auth = request.authUser!;
       const data = parsed.data;
 
-      const cashControl = await requireOpenCashSession(reply);
+      const requiresCashDrawer = data.method === "cash";
+      const cashControl = requiresCashDrawer
+        ? await requireOpenCashSession(reply)
+        : null;
 
-      if (!cashControl) {
+      if (requiresCashDrawer && !cashControl) {
         return;
       }
 
@@ -452,8 +455,8 @@ export async function debtsRoutes(app: FastifyInstance) {
         const [ledgerEntry] = await tx
           .insert(moneyLedger)
           .values({
-            businessDate: cashControl.businessDate || makeBusinessDate(paidAt),
-            cashSessionId: cashControl.session.id,
+            businessDate: cashControl?.businessDate || makeBusinessDate(paidAt),
+            cashSessionId: cashControl?.session.id || null,
             direction: "money_in",
             amountRwf: data.amountRwf,
             method: data.method,

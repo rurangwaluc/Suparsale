@@ -79,11 +79,13 @@ export default function DebtsPage() {
   const [note, setNote] = useState("");
 
   const isCashOpen = cashSession?.status === "open";
+  const cashPaymentNeedsDrawer = method === "cash";
+  const cashBlocksPayment = cashPaymentNeedsDrawer && !isCashOpen;
 
   const cashMessage = !cashSession
-    ? "Cash session is not open. Open cash before receiving debt or installment payments."
+    ? "Cash drawer is not open. Cash debt payments need an open cash drawer."
     : cashSession.status === "closed"
-      ? "Cash session is closed. Debt and installment payments are blocked for this business date."
+      ? "Cash drawer is closed. Choose MoMo, Bank, Card, Other, or open cash."
       : "";
 
   const pendingDebts = useMemo(
@@ -216,11 +218,6 @@ export default function DebtsPage() {
     debt: CustomerDebt,
     installment?: CustomerDebtInstallment,
   ) {
-    if (!isCashOpen) {
-      setMessage(cashMessage || "Open cash before receiving payments.");
-      return;
-    }
-
     setSelectedDebt(debt);
     setSelectedInstallment(installment || null);
 
@@ -249,8 +246,8 @@ export default function DebtsPage() {
   async function handleRecordPayment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!isCashOpen) {
-      setMessage(cashMessage || "Open cash before receiving payments.");
+    if (cashBlocksPayment) {
+      setMessage(cashMessage || "Open cash drawer before receiving cash payment.");
       return;
     }
 
@@ -344,8 +341,8 @@ export default function DebtsPage() {
 
         {!isCashOpen ? (
           <NoticeCard
-            title="Payment receiving is blocked"
-            text={cashMessage}
+            title="Cash drawer is closed"
+            text="Only cash debt payments need an open cash drawer. MoMo, Bank, Card, and Other payments can still be recorded."
             actionLabel={cashSession ? "View cash" : "Open cash"}
             onAction={() => router.push("/cash")}
           />
@@ -542,7 +539,7 @@ export default function DebtsPage() {
                         className="btn btn-primary btn-sm"
                         type="button"
                         onClick={() => openPaymentModal(debt)}
-                        disabled={!isCashOpen}
+                        disabled={false}
                       >
                         <Plus size={13} />
                         Record payment
@@ -667,7 +664,7 @@ export default function DebtsPage() {
                             className="btn btn-outline btn-sm"
                             type="button"
                             onClick={() => openPaymentModal(debt, installment)}
-                            disabled={!isCashOpen}
+                            disabled={false}
                           >
                             Pay installment
                           </button>
@@ -812,7 +809,7 @@ export default function DebtsPage() {
 
                   <AsyncButton
                     loading={saving}
-                    disabled={!isCashOpen}
+                    disabled={cashBlocksPayment}
                     type="submit"
                   >
                     <Plus size={15} />
