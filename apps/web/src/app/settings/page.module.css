@@ -508,3 +508,77 @@
 
 
 
+
+/* Owner-first settings polish */
+.hero {
+  border-radius: 16px;
+}
+
+.hero :global(.hero-kicker),
+.hero :global(.dashboard-kicker) {
+  display: none;
+}
+
+.hero h1 {
+  letter-spacing: -1.3px;
+}
+
+.setupCard {
+  border-radius: 14px;
+  box-shadow: var(--sh-sm);
+}
+
+.statusMini,
+.metricCard,
+.businessPanel,
+.sideStack :global(.table-card),
+.bankCard,
+.emptyBankCard,
+.cashRule,
+.cashRuleChecked {
+  border-radius: 14px;
+}
+
+.metricsGrid {
+  gap: 12px;
+}
+
+.metricCard {
+  padding: 15px;
+  box-shadow: var(--sh-sm);
+}
+
+.metricValue,
+.statusMini strong,
+.setupIntro strong,
+.setupIntro span,
+.cashRuleText strong,
+.cashRuleText span,
+.emptyBankCard strong,
+.emptyBankCard span {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.settingsGrid {
+  gap: 14px;
+}
+
+.sideStack {
+  gap: 14px;
+}
+
+.formBody {
+  gap: 16px;
+}
+
+.bankCard,
+.emptyBankCard {
+  background: var(--card);
+}
+
+@media (max-width: 760px) {
+  .hero {
+    border-radius: 14px;
+  }
+}

@@ -332,11 +332,11 @@ export default function SettingsPage() {
               Owner-only setup
             </span>
 
-            <h1>Settings</h1>
+            <h1>Business setup</h1>
 
             <p>
-              Manage shop identity, report details, cash rules, and system
-              preferences from one safe owner page.
+              Keep the shop name, contact details, report identity, payment
+              details, and cash rules ready for daily work and PDF reports.
             </p>
           </div>
 
@@ -383,7 +383,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <strong>Shop setup is owner-controlled</strong>
+                  <strong>Report and shop details</strong>
                   <span>{readySummary}</span>
                 </div>
               </div>
@@ -405,27 +405,27 @@ export default function SettingsPage() {
             <div className={styles.metricsGrid}>
               <MetricCard
                 icon={<Building2 size={20} />}
-                label="Business profile"
+                label="Business"
                 value={businessName || "Not set"}
-                help="Main shop identity used inside the system"
+                help="Name used inside the system and documents"
                 badge="Identity"
                 badgeClass="badge badge-blue"
               />
 
               <MetricCard
                 icon={<FileText size={20} />}
-                label="Report name"
+                label="Report identity"
                 value={reportBusinessName || "Not set"}
-                help="Name shown on reports and proof documents"
+                help="Name printed on downloaded reports"
                 badge="Reports"
                 badgeClass="badge badge-green"
               />
 
               <MetricCard
                 icon={<WalletCards size={20} />}
-                label="Bank accounts"
+                label="Payment details"
                 value={String(cleanBankAccounts(bankAccounts).length)}
-                help="Accounts saved for business payment details"
+                help="Bank accounts saved for business records"
                 badge="Money"
                 badgeClass="badge badge-blue"
               />
@@ -447,10 +447,10 @@ export default function SettingsPage() {
               >
                 <div className="table-card-header">
                   <div>
-                    <div className="table-title">Business profile</div>
+                    <div className="table-title">Business details</div>
                     <div className="app-subtitle">
-                      This information appears in the system, reports, and
-                      future receipts.
+                      These details appear in the system, reports, and future
+                      proof documents.
                     </div>
                   </div>
 
@@ -679,9 +679,9 @@ export default function SettingsPage() {
                 >
                   <div className="table-card-header">
                     <div>
-                      <div className="table-title">Report identity</div>
+                      <div className="table-title">Report details</div>
                       <div className="app-subtitle">
-                        Controls names and text used on PDF reports.
+                        The name and footer text printed on downloaded reports.
                       </div>
                     </div>
 
@@ -728,9 +728,9 @@ export default function SettingsPage() {
                 >
                   <div className="table-card-header">
                     <div>
-                      <div className="table-title">System preference</div>
+                      <div className="table-title">Money label</div>
                       <div className="app-subtitle">
-                        Keep system language simple and consistent.
+                        Currency text used across sales, reports, and cash.
                       </div>
                     </div>
 
@@ -763,9 +763,9 @@ export default function SettingsPage() {
                 >
                   <div className="table-card-header">
                     <div>
-                      <div className="table-title">Cash rules</div>
+                      <div className="table-title">Cash drawer rules</div>
                       <div className="app-subtitle">
-                        Decide when cash must be opened before money actions.
+                        Decide which cash actions need an open drawer.
                       </div>
                     </div>
 
