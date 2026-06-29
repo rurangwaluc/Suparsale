@@ -458,6 +458,49 @@ function friendlyMethod(value: string) {
   return map[value] || value;
 }
 
+function buildPaymentMethodRows(report: DailySummaryReport) {
+  const methods = [
+    {
+      label: "Cash",
+      received: report.methodTotals.moneyIn.cash,
+      spent: report.methodTotals.moneyOut.cash,
+    },
+    {
+      label: "MoMo",
+      received: report.methodTotals.moneyIn.momo,
+      spent: report.methodTotals.moneyOut.momo,
+    },
+    {
+      label: "Bank",
+      received: report.methodTotals.moneyIn.bank,
+      spent: report.methodTotals.moneyOut.bank,
+    },
+    {
+      label: "Card",
+      received: report.methodTotals.moneyIn.card,
+      spent: report.methodTotals.moneyOut.card,
+    },
+    {
+      label: "Other",
+      received: report.methodTotals.moneyIn.other,
+      spent: report.methodTotals.moneyOut.other,
+    },
+  ];
+
+  const activeRows = methods.filter(
+    (method) => Number(method.received || 0) > 0 || Number(method.spent || 0) > 0,
+  );
+
+  const rows = activeRows.length > 0 ? activeRows : methods.slice(0, 1);
+
+  return rows.map((method) => [
+    method.label,
+    formatRwf(method.received),
+    formatRwf(method.spent),
+    formatRwf(method.received - method.spent),
+  ]);
+}
+
 async function buildDailySummaryReport(input: {
   businessDate: string;
   fromTime?: string | null;
@@ -1028,7 +1071,7 @@ function drawTopHeader(doc: PDFKit.PDFDocument, report: DailySummaryReport) {
     .font("Helvetica")
     .fontSize(8.5)
     .fillColor("#D1D5DB")
-    .text("Audit-controlled shop report", 40, 49, {
+    .text("Business report file", 40, 49, {
       width: 260,
     });
 
@@ -1056,7 +1099,7 @@ function drawTopHeader(doc: PDFKit.PDFDocument, report: DailySummaryReport) {
     .font("Helvetica-Bold")
     .fontSize(7.5)
     .fillColor("#FFFFFF")
-    .text("OWNER PROOF FILE", 52, 79, { width: 120 });
+    .text("OWNER REPORT FILE", 52, 79, { width: 120 });
 
   doc
     .font("Helvetica")
@@ -1477,7 +1520,7 @@ function drawProofStatement(doc: PDFKit.PDFDocument) {
     .fillColor(pdfColors.blue)
     .font("Helvetica-Bold")
     .fontSize(12)
-    .text("Proof statement", 58, y + 16);
+    .text("Owner statement", 58, y + 16);
 
   doc
     .fillColor(pdfColors.ink)
@@ -1665,53 +1708,7 @@ function buildDailySummaryPdf(report: DailySummaryReport) {
         { label: "Spent", width: 125, align: "right" },
         { label: "Net", width: 155, align: "right" },
       ],
-      rows: [
-        [
-          "Cash",
-          formatRwf(report.methodTotals.moneyIn.cash),
-          formatRwf(report.methodTotals.moneyOut.cash),
-          formatRwf(
-            report.methodTotals.moneyIn.cash -
-              report.methodTotals.moneyOut.cash,
-          ),
-        ],
-        [
-          "MoMo",
-          formatRwf(report.methodTotals.moneyIn.momo),
-          formatRwf(report.methodTotals.moneyOut.momo),
-          formatRwf(
-            report.methodTotals.moneyIn.momo -
-              report.methodTotals.moneyOut.momo,
-          ),
-        ],
-        [
-          "Bank",
-          formatRwf(report.methodTotals.moneyIn.bank),
-          formatRwf(report.methodTotals.moneyOut.bank),
-          formatRwf(
-            report.methodTotals.moneyIn.bank -
-              report.methodTotals.moneyOut.bank,
-          ),
-        ],
-        [
-          "Card",
-          formatRwf(report.methodTotals.moneyIn.card),
-          formatRwf(report.methodTotals.moneyOut.card),
-          formatRwf(
-            report.methodTotals.moneyIn.card -
-              report.methodTotals.moneyOut.card,
-          ),
-        ],
-        [
-          "Other",
-          formatRwf(report.methodTotals.moneyIn.other),
-          formatRwf(report.methodTotals.moneyOut.other),
-          formatRwf(
-            report.methodTotals.moneyIn.other -
-              report.methodTotals.moneyOut.other,
-          ),
-        ],
-      ],
+      rows: buildPaymentMethodRows(report),
       emptyText: "No payment method records found.",
     });
 
@@ -1836,7 +1833,7 @@ function buildDailySummaryPdf(report: DailySummaryReport) {
       emptyText: "No money ledger records found for this date.",
     });
 
-    sectionTitle(doc, "Report Filing Note");
+    sectionTitle(doc, "Owner Filing Note");
     drawProofStatement(doc);
 
     addPageNumbers(doc);
