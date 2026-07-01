@@ -497,3 +497,127 @@
 
 
 
+
+/* Owner-first attention page polish */
+.hero {
+  border-radius: 16px;
+}
+
+.hero :global(.hero-kicker),
+.hero :global(.dashboard-kicker) {
+  display: none;
+}
+
+.hero h1 {
+  letter-spacing: -1.3px;
+}
+
+.summaryCardClean,
+.summaryCardWarning,
+.problemSection,
+.cleanStrip {
+  border-radius: 14px;
+  box-shadow: var(--sh-sm);
+}
+
+.summaryCardClean,
+.summaryCardWarning {
+  margin-bottom: 14px;
+}
+
+.statusGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.statusMini {
+  border-radius: 12px;
+  padding: 11px;
+}
+
+.metricsGrid,
+.sectionGrid {
+  display: none;
+}
+
+.problemSection {
+  margin-top: 0;
+}
+
+.featuredSection {
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+.problemList {
+  padding: 10px 14px 14px;
+}
+
+.problemCard {
+  border-radius: 13px;
+  background: var(--card);
+  padding: 12px;
+}
+
+.problemTitleRow strong,
+.problemContent p,
+.problemContent > span,
+.statusMini strong,
+.summaryIntro strong,
+.summaryIntro span {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.cleanStrip {
+  margin-top: 14px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid rgba(34, 197, 94, 0.24);
+  background: var(--green-lt);
+}
+
+.cleanStrip strong {
+  display: block;
+  color: var(--gray-900);
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.cleanStrip span:not(:global(.badge)) {
+  display: block;
+  margin-top: 4px;
+  color: var(--gray-600);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+@media (max-width: 1180px) {
+  .statusGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    border-radius: 14px;
+  }
+
+  .statusGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cleanStrip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 420px) {
+  .statusGrid {
+    grid-template-columns: 1fr;
+  }
+}

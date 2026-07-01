@@ -109,6 +109,11 @@ export default function ProblemsPage() {
     [problems],
   );
 
+  const priorityProblems = useMemo(
+    () => (urgentProblems.length > 0 ? urgentProblems : infoProblems.slice(0, 3)),
+    [infoProblems, urgentProblems],
+  );
+
   const hasProblems = problems.length > 0;
   const hasUrgentWork =
     criticalProblems.length > 0 || warningProblems.length > 0;
@@ -171,8 +176,8 @@ export default function ProblemsPage() {
             <h1>Owner attention</h1>
 
             <p>
-              See what needs owner action before closing the day: cash,
-              customer payments, expenses, stock, and sales.
+              See what needs action now, what can wait, and what is clean before
+              closing the day.
             </p>
           </div>
 
@@ -244,13 +249,13 @@ export default function ProblemsPage() {
                 <div>
                   <strong>
                     {hasProblems
-                      ? "Start with these attention items."
+                      ? "Fix these before closing the day."
                       : "The shop looks clean right now."}
                   </strong>
                   <span>
                     {hasProblems
-                      ? "Start with urgent items, then review warnings before closing the day."
-                      : "No urgent issue was found for this date."}
+                      ? "Start with the first item below. Everything else can wait."
+                      : "No urgent item was found for this date."}
                   </span>
                 </div>
               </div>
@@ -271,119 +276,38 @@ export default function ProblemsPage() {
                 <StatusMini label="Notes" value={String(infoProblems.length)} />
 
                 <StatusMini
-                  label="Total items"
+                  label="Date"
                   value={String(problems.length)}
                   danger={problems.length > 0}
                 />
               </div>
             </section>
 
-            <div className={styles.metricsGrid}>
-              <ProblemMetric
-                icon={<AlertTriangle size={20} />}
-                label="Urgent"
-                value={String(criticalProblems.length)}
-                help="Needs owner action first"
-                badge="Now"
-                badgeClass={
-                  criticalProblems.length > 0
-                    ? "badge badge-blue"
-                    : "badge badge-green"
-                }
-              />
-
-              <ProblemMetric
-                icon={<Clock3 size={20} />}
-                label="Needs review"
-                value={String(warningProblems.length)}
-                help="Check before closing day"
-                badge="Review"
-                badgeClass={
-                  warningProblems.length > 0
-                    ? "badge badge-blue"
-                    : "badge badge-green"
-                }
-              />
-
-              <ProblemMetric
-                icon={<ShieldCheck size={20} />}
-                label="Notes"
-                value={String(infoProblems.length)}
-                help="Useful things to know"
-                badge="Info"
-                badgeClass="badge badge-blue"
-              />
-
-              <ProblemMetric
-                icon={<CheckCircle2 size={20} />}
-                label="Clean areas"
-                value={String(cleanAreas.length)}
-                help={
-                  cleanAreas.length > 0 ? cleanAreas.join(", ") : "None yet"
-                }
-                badge="Clean"
-                badgeClass="badge badge-green"
-              />
-            </div>
-
             <ProblemSection
-              title="Start here"
-              subtitle="Most important items to fix first."
-              emptyTitle="No urgent item"
-              emptyText="There is no urgent item for this date."
-              problems={urgentProblems}
+              title="Action needed first"
+              subtitle="Only the items the owner should fix or review now."
+              emptyTitle="No action needed"
+              emptyText="There is no urgent or review item for this date."
+              problems={priorityProblems}
               onAction={(href) => router.push(href)}
               featured
             />
 
-            <div className={styles.sectionGrid}>
-              <ProblemSection
-                title="Customer payments"
-                subtitle="Overdue payments, payments due today, and installments."
-                emptyTitle="Customer payments are clean"
-                emptyText="No customer payment needs attention."
-                problems={debtProblems}
-                onAction={(href) => router.push(href)}
-              />
+            <section className={styles.cleanStrip}>
+              <div>
+                <strong>Clean areas</strong>
+                <span>
+                  {cleanAreas.length > 0
+                    ? cleanAreas.join(", ")
+                    : "No clean area found yet."}
+                </span>
+              </div>
 
-              <ProblemSection
-                title="Stock attention"
-                subtitle="Products with low or zero stock."
-                emptyTitle="Stock looks clean"
-                emptyText="No stock item needs attention."
-                problems={stockProblems}
-                onAction={(href) => router.push(href)}
-              />
-            </div>
+              <span className="badge badge-green">
+                {cleanAreas.length} clean
+              </span>
+            </section>
 
-            <div className={styles.sectionGrid}>
-              <ProblemSection
-                title="Expense approvals"
-                subtitle="Expenses waiting for owner review."
-                emptyTitle="Expenses are clean"
-                emptyText="No expense needs attention."
-                problems={expenseProblems}
-                onAction={(href) => router.push(href)}
-              />
-
-              <ProblemSection
-                title="Cash attention"
-                subtitle="Cash opening, closing, differences, and reopened cash."
-                emptyTitle="Cash looks clean"
-                emptyText="No cash item needs attention."
-                problems={cashProblems}
-                onAction={(href) => router.push(href)}
-              />
-            </div>
-
-            <ProblemSection
-              title="Sales notes"
-              subtitle="Sales that still need attention."
-              emptyTitle="Sales look clean"
-              emptyText="No sale needs attention."
-              problems={salesProblems}
-              onAction={(href) => router.push(href)}
-            />
           </>
         ) : null}
       </div>
