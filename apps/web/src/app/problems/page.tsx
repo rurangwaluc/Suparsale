@@ -277,8 +277,7 @@ export default function ProblemsPage() {
 
                 <StatusMini
                   label="Date"
-                  value={String(problems.length)}
-                  danger={problems.length > 0}
+                  value={businessDate}
                 />
               </div>
             </section>
