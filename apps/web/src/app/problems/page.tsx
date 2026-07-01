@@ -159,20 +159,20 @@ export default function ProblemsPage() {
   }
 
   return (
-    <AppShell title="Problems">
+    <AppShell title="Attention">
       <div className={styles.problemsPage}>
         <section className={`dashboard-hero ${styles.hero}`}>
           <div className={styles.heroCopy}>
             <span className="hero-kicker dashboard-kicker">
               <AlertTriangle size={15} />
-              Owner attention center
+              Daily business checks
             </span>
 
-            <h1>Problems</h1>
+            <h1>Owner attention</h1>
 
             <p>
-              See what needs owner attention: cash, customer payments, expenses,
-              stock, and sales.
+              See what needs owner action before closing the day: cash,
+              customer payments, expenses, stock, and sales.
             </p>
           </div>
 
@@ -244,7 +244,7 @@ export default function ProblemsPage() {
                 <div>
                   <strong>
                     {hasProblems
-                      ? "Some things need attention."
+                      ? "Start with these attention items."
                       : "The shop looks clean right now."}
                   </strong>
                   <span>
@@ -271,7 +271,7 @@ export default function ProblemsPage() {
                 <StatusMini label="Notes" value={String(infoProblems.length)} />
 
                 <StatusMini
-                  label="Total problems"
+                  label="Total items"
                   value={String(problems.length)}
                   danger={problems.length > 0}
                 />
@@ -328,8 +328,8 @@ export default function ProblemsPage() {
 
             <ProblemSection
               title="Start here"
-              subtitle="Most important problems to fix first."
-              emptyTitle="No urgent problem"
+              subtitle="Most important items to fix first."
+              emptyTitle="No urgent item"
               emptyText="There is no urgent item for this date."
               problems={urgentProblems}
               onAction={(href) => router.push(href)}
@@ -340,17 +340,17 @@ export default function ProblemsPage() {
               <ProblemSection
                 title="Customer payments"
                 subtitle="Overdue payments, payments due today, and installments."
-                emptyTitle="No customer payment problem"
-                emptyText="Customer payments look clean."
+                emptyTitle="Customer payments are clean"
+                emptyText="No customer payment needs attention."
                 problems={debtProblems}
                 onAction={(href) => router.push(href)}
               />
 
               <ProblemSection
-                title="Stock problems"
+                title="Stock attention"
                 subtitle="Products with low or zero stock."
-                emptyTitle="No stock problem"
-                emptyText="Stock looks clean."
+                emptyTitle="Stock looks clean"
+                emptyText="No stock item needs attention."
                 problems={stockProblems}
                 onAction={(href) => router.push(href)}
               />
@@ -360,17 +360,17 @@ export default function ProblemsPage() {
               <ProblemSection
                 title="Expense approvals"
                 subtitle="Expenses waiting for owner review."
-                emptyTitle="No expense problem"
+                emptyTitle="Expenses are clean"
                 emptyText="No expense needs attention."
                 problems={expenseProblems}
                 onAction={(href) => router.push(href)}
               />
 
               <ProblemSection
-                title="Cash problems"
+                title="Cash attention"
                 subtitle="Cash opening, closing, differences, and reopened cash."
-                emptyTitle="No cash problem"
-                emptyText="Cash looks clean."
+                emptyTitle="Cash looks clean"
+                emptyText="No cash item needs attention."
                 problems={cashProblems}
                 onAction={(href) => router.push(href)}
               />
@@ -379,8 +379,8 @@ export default function ProblemsPage() {
             <ProblemSection
               title="Sales notes"
               subtitle="Sales that still need attention."
-              emptyTitle="No sales problem"
-              emptyText="Sales look clean."
+              emptyTitle="Sales look clean"
+              emptyText="No sale needs attention."
               problems={salesProblems}
               onAction={(href) => router.push(href)}
             />

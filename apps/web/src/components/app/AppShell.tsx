@@ -123,7 +123,7 @@ const navItems: NavItem[] = [
   },
   {
     href: "/problems",
-    label: "Problems",
+    label: "Attention",
     icon: AlertTriangle,
     permissions: ["problems.view"],
   },
